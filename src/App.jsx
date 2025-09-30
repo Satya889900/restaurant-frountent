@@ -11,6 +11,8 @@ import Footer from "./components/Footer";
 import PrivateRoute from "./pages/PrivateRoute";
 
 function App() {
+  console.log("01-10-2025");
+  
   return (
     <Router>
       <Navbar />
