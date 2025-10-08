@@ -17,7 +17,7 @@ const Navbar = () => {
         🍽️ Restaurant Booking
       </Link>
       <div className="space-x-4">
-        <Link to="/">Home</Link>
+        {user && <Link to="/">Home</Link>}
         {user && <Link to="/bookings">My Bookings</Link>}
         {user?.role === "admin" && <Link to="/admin">Admin Panel</Link>}
         {!user && <Link to="/login">Login</Link>}
