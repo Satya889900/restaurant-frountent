@@ -3,6 +3,7 @@ import TableCard from "../components/TableCard.jsx";
 import { getTables } from "../services/tableService.js";
 import { AuthContext } from "../context/AuthContext.jsx";
 import { createBooking } from "../services/bookingService.js";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Home = () => {
   const [tables, setTables] = useState([]);
@@ -13,12 +14,20 @@ const Home = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const { user, token } = useContext(AuthContext);
+  const [popup, setPopup] = useState({ show: false, message: "", type: "success" });
 
   // Available time slots
   const timeSlots = [
     "11:00", "11:30", "12:00", "12:30", "13:00", "13:30",
     "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30"
   ];
+
+  const showPopup = (message, type = "success") => {
+    setPopup({ show: true, message, type });
+    setTimeout(() => {
+      setPopup({ show: false, message: "", type: "success" });
+    }, 2000); // The popup will show for 2 seconds
+  };
 
   const fetchTables = async () => {
     if (!selectedDate || !selectedTime) return;
@@ -31,7 +40,7 @@ const Home = () => {
       setTables(data);
     } catch (err) {
       console.error(err);
-      alert("Failed to load tables");
+      showPopup("Failed to load tables", "error");
     } finally {
       setIsLoading(false);
     }
@@ -42,9 +51,9 @@ const Home = () => {
   }, [selectedDate, selectedTime]);
 
   const handleBook = async (tableId) => {
-    if (!user || !token) return alert("Please login to book a table");
-    if (!tableId) return alert("Invalid table");
-    if (!selectedDate || !selectedTime) return alert("Please select a date and time");
+    if (!user || !token) return showPopup("Please login to book a table", "error");
+    if (!tableId) return showPopup("Invalid table", "error");
+    if (!selectedDate || !selectedTime) return showPopup("Please select a date and time", "error");
 
     const dateTime = new Date(selectedDate);
     const [hours, minutes] = selectedTime.split(":");
@@ -52,7 +61,7 @@ const Home = () => {
 
     try {
       await createBooking(tableId, token, dateTime.toISOString());
-      alert("Table booked successfully!");
+      showPopup("Table booked successfully!");
 
       setTables((prev) =>
         prev.map((t) =>
@@ -61,7 +70,7 @@ const Home = () => {
       );
     } catch (err) {
       console.error(err.response?.data || err);
-      alert(err.response?.data?.message || "Booking failed");
+      showPopup(err.response?.data?.message || "Booking failed", "error");
     }
   };
 
@@ -147,6 +156,28 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8 relative overflow-hidden">
+      {/* Popup Notification */}
+      <AnimatePresence>
+        {popup.show && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: -50, x: "-50%" }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className={`fixed top-24 left-1/2 z-50 p-4 rounded-xl shadow-2xl text-white ${
+              popup.type === "success"
+                ? "bg-gradient-to-r from-green-500 to-emerald-600"
+                : "bg-gradient-to-r from-red-500 to-rose-600"
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <span>{popup.type === "success" ? "✅" : "❌"}</span>
+              <p className="font-semibold">{popup.message}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-32 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>

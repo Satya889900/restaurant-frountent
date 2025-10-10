@@ -20,7 +20,7 @@ const Register = () => {
     setIsLoading(true);
     try {
       const data = await registerUser({ name, email, password, role: "user" });
-      login(data);
+      login(data.user, data.token);
       navigate("/");
     } catch (err) {
       console.error(err.response?.data || err);

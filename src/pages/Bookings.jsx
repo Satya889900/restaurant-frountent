@@ -1,12 +1,21 @@
 import { useEffect, useState, useContext } from "react";
 import { getMyBookings, cancelBooking } from "../services/bookingService.js";
 import { AuthContext } from "../context/AuthContext.jsx";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Bookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
   const { user, token } = useContext(AuthContext);
+  const [popup, setPopup] = useState({ show: false, message: "", type: "success" });
+
+  const showPopup = (message, type = "success") => {
+    setPopup({ show: true, message, type });
+    setTimeout(() => {
+      setPopup({ show: false, message: "", type: "success" });
+    }, 1000);
+  };
 
   const fetchBookings = async () => {
     try {
@@ -29,11 +38,11 @@ const Bookings = () => {
     try {
       setCancellingId(id);
       await cancelBooking(id, token);
-      alert("Booking cancelled successfully");
+      showPopup("Booking cancelled successfully");
       fetchBookings();
     } catch (err) {
       console.error(err);
-      alert("Failed to cancel booking");
+      showPopup("Failed to cancel booking", "error");
     } finally {
       setCancellingId(null);
     }
@@ -94,6 +103,28 @@ const Bookings = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+      {/* Popup Notification */}
+      <AnimatePresence>
+        {popup.show && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: -50, x: "-50%" }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className={`fixed top-24 left-1/2 z-50 p-4 rounded-xl shadow-2xl text-white ${
+              popup.type === "success"
+                ? "bg-gradient-to-r from-green-500 to-emerald-600"
+                : "bg-gradient-to-r from-red-500 to-rose-600"
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <span>{popup.type === "success" ? "✅" : "❌"}</span>
+              <p className="font-semibold">{popup.message}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
