@@ -17,7 +17,8 @@ import {
   Star,
   AlertCircle
 } from "lucide-react";
-
+import { Utensils, StickyNote, Tag, ChefHat } from "lucide-react";
+ 
 const TableImageCarousel = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -361,23 +362,70 @@ const AdminPanel = () => {
                       )}
                     </div>
 
-                    {/* Features Preview */}
+                    {/* Food Types */}
+                    {table.foodTypes && table.foodTypes.length > 0 && (
+                      <div className="mb-4">
+                        <div className="flex items-center text-sm text-gray-500 mb-1">
+                          <Utensils className="w-4 h-4 mr-2 text-gray-400" />
+                          <span className="font-semibold">Cuisine</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {table.foodTypes.map((type, index) => (
+                            <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-md">{type}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Class Features */}
                     {table.classFeatures && table.classFeatures.length > 0 && (
                       <div className="mb-4">
+                        <div className="flex items-center text-sm text-gray-500 mb-1">
+                          <Star className="w-4 h-4 mr-2 text-gray-400" />
+                          <span className="font-semibold">Features</span>
+                        </div>
                         <div className="flex flex-wrap gap-1">
-                          {table.classFeatures.slice(0, 3).map((feature, index) => (
-                            <span
-                              key={index}
-                              className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-md"
-                            >
+                          {table.classFeatures.map((feature, index) => (
+                            <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-md">
                               {feature}
                             </span>
                           ))}
-                          {table.classFeatures.length > 3 && (
-                            <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-md">
-                              +{table.classFeatures.length - 3} more
-                            </span>
-                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Food Menu Preview */}
+                    {table.foodMenu && table.foodMenu.length > 0 && (
+                      <div className="mb-4">
+                        <div className="flex items-center text-sm text-gray-500 mb-1">
+                          <ChefHat className="w-4 h-4 mr-2 text-gray-400" />
+                          <span className="font-semibold">Menu Items</span>
+                        </div>
+                        <p className="text-xs text-gray-600">{table.foodMenu.length} item(s) configured.</p>
+                      </div>
+                    )}
+
+                    {/* Offers Preview */}
+                    {table.offers && table.offers.length > 0 && (
+                      <div className="mb-4">
+                        <div className="flex items-center text-sm text-gray-500 mb-1">
+                          <Tag className="w-4 h-4 mr-2 text-gray-400" />
+                          <span className="font-semibold">Offers</span>
+                        </div>
+                        <p className="text-xs text-gray-600">{table.offers.length} offer(s) available.</p>
+                      </div>
+                    )}
+
+                    {/* Notes */}
+                    {table.notes && (
+                      <div className="mb-4">
+                        <div className="flex items-center text-sm text-gray-500 mb-1">
+                          <StickyNote className="w-4 h-4 mr-2 text-gray-400" />
+                          <span className="font-semibold">Notes</span>
+                        </div>
+                        <div className="text-xs text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+                          <p className="truncate group-hover:whitespace-normal group-hover:overflow-visible">
+                            {table.notes}</p>
                         </div>
                       </div>
                     )}

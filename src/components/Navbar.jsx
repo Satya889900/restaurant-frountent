@@ -15,6 +15,21 @@ const Navbar = () => {
     setIsMenuOpen(false);
   };
 
+  const handleBookTableClick = () => {
+    setIsMenuOpen(false);
+    if (location.pathname === "/") {
+      document.getElementById('booking-section')?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // Use navigate to go to the home page, and the hash will be handled by the Home component
+      navigate('/#booking-section');
+      // A slight delay may be needed for the page to render before scrolling
+      setTimeout(() => {
+        const element = document.getElementById('booking-section');
+        element?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  };
+
   const isActiveRoute = (path) => {
     return location.pathname === path;
   };
@@ -81,6 +96,19 @@ const Navbar = () => {
                   </Link>
                 </motion.div>
               )
+            )}
+            {user && (
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <button
+                  onClick={handleBookTableClick}
+                  className="px-6 py-3 rounded-xl font-semibold transition-all duration-300 border-2 text-gray-600 hover:text-purple-600 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
+                >
+                  Book a Table
+                </button>
+              </motion.div>
             )}
 
             {/* Auth Buttons */}
@@ -192,6 +220,18 @@ const Navbar = () => {
                       </Link>
                     </motion.div>
                   )
+                )}
+                {user && (
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <button
+                      onClick={handleBookTableClick}
+                      className="block w-full text-left px-6 py-4 rounded-xl font-semibold transition-all duration-300 border-2 text-gray-600 hover:text-purple-600 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
+                    >
+                      Book a Table
+                    </button>
+                  </motion.div>
                 )}
                 
                 {/* Mobile Auth Buttons */}
