@@ -9,7 +9,6 @@ const Home = () => {
   const [tables, setTables] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
   const [isLoading, setIsLoading] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const { user, token } = useContext(AuthContext);
@@ -111,16 +110,6 @@ const Home = () => {
     }
   ];
 
-  // Payment Offers
-  const paymentOffers = [
-    { bank: "AXIS Bank", offer: "Get 20% off up to ₹500" },
-    { bank: "Amex Platinum", offer: "1+1 on dining across city" },
-    { bank: "Indusind", offer: "15% instant discount" },
-    { bank: "HSBC", offer: "Buy 1 Get 1 free" },
-    { bank: "DBS Bank Vantage Card", offer: "Extra 10% cashback" },
-    { bank: "Amex Centurion", offer: "Complimentary dessert" }
-  ];
-
   // Carousel slides data
   const carouselSlides = [
     {
@@ -166,10 +155,11 @@ const Home = () => {
     
     try {
       const data = await getTables(date, selectedTime);
-      setTables(data);
+      setTables(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
       showPopup("Failed to load tables", "error");
+      setTables([]);
     } finally {
       setIsLoading(false);
     }
@@ -189,14 +179,15 @@ const Home = () => {
     dateTime.setHours(parseInt(hours), parseInt(minutes));
 
     try {
-      await createBooking(tableId, token, dateTime.toISOString());
+      const result = await createBooking({ 
+        table: tableId, 
+        startTime: dateTime.toISOString(),
+        // endTime is calculated on the backend
+      }, token);
+
       showPopup("Table booked successfully!");
 
-      setTables((prev) =>
-        prev.map((t) =>
-          t._id === tableId ? { ...t, available: false } : t
-        )
-      );
+      setTables(result.tables || []); // Use the updated table list from the backend
     } catch (err) {
       console.error(err.response?.data || err);
       showPopup(err.response?.data?.message || "Booking failed", "error");
@@ -507,251 +498,251 @@ const Home = () => {
           </div>
         </motion.div>
 
-
-     {/* Payment Offers Section */}
-<div className="p-8 md:p-12 bg-gradient-to-br from-purple-50 to-indigo-50 border-t border-purple-200">
-  <div className="text-center mb-8">
-    <h3 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">🎉 Exclusive Payment Offers</h3>
-    <p className="text-gray-600 max-w-2xl mx-auto">Save more with these amazing bank offers and discounts</p>
-    <div className="w-20 h-1 bg-gradient-to-r from-purple-500 to-indigo-500 mx-auto rounded-full mt-4"></div>
-  </div>
-  
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-    {[
-      { 
-        bank: "AXIS Bank", 
-        offer: "Get 20% off up to ₹500",
-        discount: "20% OFF",
-        minAmount: "₹1000",
-        maxDiscount: "₹500",
-        validity: "Until Dec 31, 2024",
-        usage: "First 3 transactions",
-        code: "AXISDINE20",
-        icon: "🏦",
-        color: "from-blue-500 to-blue-600"
-      },
-      { 
-        bank: "Amex Platinum", 
-        offer: "1+1 on dining across city",
-        discount: "BUY 1 GET 1",
-        minAmount: "₹1500",
-        maxDiscount: "₹1000",
-        validity: "Valid till stock lasts",
-        usage: "Weekends only",
-        code: "AMEXBOGO",
-        icon: "💎",
-        color: "from-green-500 to-emerald-600"
-      },
-      { 
-        bank: "Indusind", 
-        offer: "15% instant discount",
-        discount: "15% OFF",
-        minAmount: "₹800",
-        maxDiscount: "₹300",
-        validity: "Until Jan 15, 2025",
-        usage: "Unlimited usage",
-        code: "INDUSDINE15",
-        icon: "🔶",
-        color: "from-orange-500 to-red-500"
-      },
-      { 
-        bank: "HSBC", 
-        offer: "Buy 1 Get 1 free",
-        discount: "B1G1 FREE",
-        minAmount: "₹1200",
-        maxDiscount: "₹800",
-        validity: "Friday & Saturday",
-        usage: "Once per month",
-        code: "HSBCB1G1",
-        icon: "🔴",
-        color: "from-red-500 to-pink-500"
-      },
-      { 
-        bank: "DBS Bank Vantage Card", 
-        offer: "Extra 10% cashback",
-        discount: "10% CASHBACK",
-        minAmount: "₹500",
-        maxDiscount: "₹250",
-        validity: "All days",
-        usage: "First 5 transactions",
-        code: "DBSVANTAGE10",
-        icon: "💳",
-        color: "from-purple-500 to-indigo-600"
-      },
-      { 
-        bank: "Amex Centurion", 
-        offer: "Complimentary dessert + 25% off",
-        discount: "25% OFF + DESSERT",
-        minAmount: "₹2000",
-        maxDiscount: "₹750",
-        validity: "Fine dining restaurants",
-        usage: "Once per card",
-        code: "AMEXCENT25",
-        icon: "👑",
-        color: "from-black to-gray-800"
-      }
-    ].map((offer, index) => (
-      <motion.div
-        key={index}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: index * 0.1 }}
-        whileHover={{ 
-          scale: 1.05,
-          y: -5
-        }}
-        className="relative group"
-      >
-        {/* Main Card */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-purple-100 hover:shadow-2xl transition-all duration-500 group-hover:border-purple-300 relative overflow-hidden">
-          {/* Background Gradient Effect */}
-          <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${offer.color}/10 rounded-full -translate-y-10 translate-x-10 group-hover:scale-150 transition-transform duration-500`}></div>
+        {/* Payment Offers Section */}
+        <div className="p-8 md:p-12 bg-gradient-to-br from-purple-50 to-indigo-50 border-t border-purple-200">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">🎉 Exclusive Payment Offers</h3>
+            <p className="text-gray-600 max-w-2xl mx-auto">Save more with these amazing bank offers and discounts</p>
+            <div className="w-20 h-1 bg-gradient-to-r from-purple-500 to-indigo-500 mx-auto rounded-full mt-4"></div>
+          </div>
           
-          {/* Bank Logo/Badge */}
-          <div className="flex items-center justify-between mb-4 relative z-10">
-            <div className="flex items-center space-x-3">
-              <div className={`w-12 h-12 bg-gradient-to-r ${offer.color} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                <span className="text-white font-bold text-lg">{offer.icon}</span>
-              </div>
-              <div>
-                <h4 className="font-bold text-gray-800 text-lg">{offer.bank}</h4>
-                <div className="flex items-center space-x-1">
-                  <span className="text-green-500 text-sm">⭐</span>
-                  <span className="text-gray-500 text-xs">Verified Offer</span>
-                </div>
-              </div>
-            </div>
-            {/* Discount Badge */}
-            <div className="text-right">
-              <div className={`bg-gradient-to-r ${offer.color} text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg`}>
-                {offer.discount}
-              </div>
-            </div>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {[
+              { 
+                bank: "AXIS Bank", 
+                offer: "Get 20% off up to ₹500",
+                discount: "20% OFF",
+                minAmount: "₹1000",
+                maxDiscount: "₹500",
+                validity: "Until Dec 31, 2024",
+                usage: "First 3 transactions",
+                code: "AXISDINE20",
+                icon: "🏦",
+                color: "from-blue-500 to-blue-600"
+              },
+              { 
+                bank: "Amex Platinum", 
+                offer: "1+1 on dining across city",
+                discount: "BUY 1 GET 1",
+                minAmount: "₹1500",
+                maxDiscount: "₹1000",
+                validity: "Valid till stock lasts",
+                usage: "Weekends only",
+                code: "AMEXBOGO",
+                icon: "💎",
+                color: "from-green-500 to-emerald-600"
+              },
+              { 
+                bank: "Indusind", 
+                offer: "15% instant discount",
+                discount: "15% OFF",
+                minAmount: "₹800",
+                maxDiscount: "₹300",
+                validity: "Until Jan 15, 2025",
+                usage: "Unlimited usage",
+                code: "INDUSDINE15",
+                icon: "🔶",
+                color: "from-orange-500 to-red-500"
+              },
+              { 
+                bank: "HSBC", 
+                offer: "Buy 1 Get 1 free",
+                discount: "B1G1 FREE",
+                minAmount: "₹1200",
+                maxDiscount: "₹800",
+                validity: "Friday & Saturday",
+                usage: "Once per month",
+                code: "HSBCB1G1",
+                icon: "🔴",
+                color: "from-red-500 to-pink-500"
+              },
+              { 
+                bank: "DBS Bank Vantage Card", 
+                offer: "Extra 10% cashback",
+                discount: "10% CASHBACK",
+                minAmount: "₹500",
+                maxDiscount: "₹250",
+                validity: "All days",
+                usage: "First 5 transactions",
+                code: "DBSVANTAGE10",
+                icon: "💳",
+                color: "from-purple-500 to-indigo-600"
+              },
+              { 
+                bank: "Amex Centurion", 
+                offer: "Complimentary dessert + 25% off",
+                discount: "25% OFF + DESSERT",
+                minAmount: "₹2000",
+                maxDiscount: "₹750",
+                validity: "Fine dining restaurants",
+                usage: "Once per card",
+                code: "AMEXCENT25",
+                icon: "👑",
+                color: "from-black to-gray-800"
+              }
+            ].map((offer, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ 
+                  scale: 1.05,
+                  y: -5
+                }}
+                className="relative group"
+              >
+                {/* Main Card */}
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-purple-100 hover:shadow-2xl transition-all duration-500 group-hover:border-purple-300 relative overflow-hidden">
+                  {/* Background Gradient Effect */}
+                  <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-br ${offer.color}/10 rounded-full -translate-y-10 translate-x-10 group-hover:scale-150 transition-transform duration-500`}></div>
+                  
+                  {/* Bank Logo/Badge */}
+                  <div className="flex items-center justify-between mb-4 relative z-10">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-12 h-12 bg-gradient-to-r ${offer.color} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                        <span className="text-white font-bold text-lg">{offer.icon}</span>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-800 text-lg">{offer.bank}</h4>
+                        <div className="flex items-center space-x-1">
+                          <span className="text-green-500 text-sm">⭐</span>
+                          <span className="text-gray-500 text-xs">Verified Offer</span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Discount Badge */}
+                    <div className="text-right">
+                      <div className={`bg-gradient-to-r ${offer.color} text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg`}>
+                        {offer.discount}
+                      </div>
+                    </div>
+                  </div>
 
-          {/* Offer Details */}
-          <div className="relative z-10 space-y-3 mb-4">
-            {/* Main Offer */}
-            <div className="text-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-              <p className="text-gray-700 font-semibold text-sm">{offer.offer}</p>
-            </div>
+                  {/* Offer Details */}
+                  <div className="relative z-10 space-y-3 mb-4">
+                    {/* Main Offer */}
+                    <div className="text-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                      <p className="text-gray-700 font-semibold text-sm">{offer.offer}</p>
+                    </div>
 
-            {/* Discount Details */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-gray-50 p-2 rounded-lg text-center">
-                <p className="text-gray-500">Min. Amount</p>
-                <p className="font-semibold text-gray-800">{offer.minAmount}</p>
-              </div>
-              <div className="bg-gray-50 p-2 rounded-lg text-center">
-                <p className="text-gray-500">Max. Discount</p>
-                <p className="font-semibold text-gray-800">{offer.maxDiscount}</p>
-              </div>
-            </div>
+                    {/* Discount Details */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-gray-50 p-2 rounded-lg text-center">
+                        <p className="text-gray-500">Min. Amount</p>
+                        <p className="font-semibold text-gray-800">{offer.minAmount}</p>
+                      </div>
+                      <div className="bg-gray-50 p-2 rounded-lg text-center">
+                        <p className="text-gray-500">Max. Discount</p>
+                        <p className="font-semibold text-gray-800">{offer.maxDiscount}</p>
+                      </div>
+                    </div>
 
-            {/* Validity & Usage */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-500">Validity:</span>
-                <span className="font-semibold text-gray-800">{offer.validity}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-500">Usage:</span>
-                <span className="font-semibold text-gray-800">{offer.usage}</span>
-              </div>
-            </div>
+                    {/* Validity & Usage */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-500">Validity:</span>
+                        <span className="font-semibold text-gray-800">{offer.validity}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-500">Usage:</span>
+                        <span className="font-semibold text-gray-800">{offer.usage}</span>
+                      </div>
+                    </div>
 
-            {/* Promo Code */}
-            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-3 rounded-lg border border-purple-200">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-xs">Promo Code:</span>
-                <div className="flex items-center space-x-2">
-                  <code className="bg-white px-2 py-1 rounded text-xs font-mono font-bold text-purple-600 border border-purple-200">
-                    {offer.code}
-                  </code>
-                  <button 
-                    onClick={() => navigator.clipboard.writeText(offer.code)}
-                    className="text-purple-500 hover:text-purple-700 transition-colors"
+                    {/* Promo Code */}
+                    <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-3 rounded-lg border border-purple-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 text-xs">Promo Code:</span>
+                        <div className="flex items-center space-x-2">
+                          <code className="bg-white px-2 py-1 rounded text-xs font-mono font-bold text-purple-600 border border-purple-200">
+                            {offer.code}
+                          </code>
+                          <button 
+                            onClick={() => navigator.clipboard.writeText(offer.code)}
+                            className="text-purple-500 hover:text-purple-700 transition-colors"
+                          >
+                            📋
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CTA Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`w-full bg-gradient-to-r ${offer.color} hover:shadow-xl text-white py-3 rounded-xl font-semibold shadow-lg transition-all duration-300 group-hover:shadow-purple-200 relative z-10`}
                   >
-                    📋
-                  </button>
+                    Avail This Offer
+                  </motion.button>
+
+                  {/* Terms */}
+                  <p className="text-gray-400 text-xs text-center mt-3">
+                    T&C Apply • Limited period offer
+                  </p>
+
+                  {/* Shine Effect on Hover */}
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 </div>
+
+                {/* Floating Elements */}
+                <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-yellow-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse"></div>
+                <div className="absolute -top-2 -right-2 w-4 h-4 bg-green-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200 animate-pulse"></div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Additional Info */}
+          <div className="text-center mt-8">
+            <div className="inline-flex items-center space-x-4 bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg border border-purple-100">
+              <div className="flex items-center space-x-2">
+                <span className="text-green-500 text-lg">✅</span>
+                <p className="text-gray-600 text-sm font-medium">Instant discount at payment</p>
+              </div>
+              <div className="w-px h-6 bg-gray-300"></div>
+              <div className="flex items-center space-x-2">
+                <span className="text-blue-500 text-lg">🔄</span>
+                <p className="text-gray-600 text-sm font-medium">No minimum wait time</p>
+              </div>
+              <div className="w-px h-6 bg-gray-300"></div>
+              <div className="flex items-center space-x-2">
+                <span className="text-purple-500 text-lg">🎯</span>
+                <p className="text-gray-600 text-sm font-medium">Applicable on all restaurants</p>
               </div>
             </div>
           </div>
 
-          {/* CTA Button */}
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className={`w-full bg-gradient-to-r ${offer.color} hover:shadow-xl text-white py-3 rounded-xl font-semibold shadow-lg transition-all duration-300 group-hover:shadow-purple-200 relative z-10`}
-          >
-            Avail This Offer
-          </motion.button>
-
-          {/* Terms */}
-          <p className="text-gray-400 text-xs text-center mt-3">
-            T&C Apply • Limited period offer
-          </p>
-
-          {/* Shine Effect on Hover */}
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+          {/* How to Use Section */}
+          <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-gray-200 max-w-4xl mx-auto">
+            <h4 className="text-lg font-bold text-gray-800 mb-4 text-center">How to Use These Offers</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-blue-600 text-xl">1</span>
+                </div>
+                <h5 className="font-semibold text-gray-800 mb-2">Select Your Bank</h5>
+                <p className="text-gray-600 text-sm">Choose your preferred bank offer from the list above</p>
+              </div>
+              <div className="text-center p-4">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-green-600 text-xl">2</span>
+                </div>
+                <h5 className="font-semibold text-gray-800 mb-2">Apply Promo Code</h5>
+                <p className="text-gray-600 text-sm">Copy and apply the promo code during payment</p>
+              </div>
+              <div className="text-center p-4">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-purple-600 text-xl">3</span>
+                </div>
+                <h5 className="font-semibold text-gray-800 mb-2">Enjoy Discount</h5>
+                <p className="text-gray-600 text-sm">Get instant discount on your final bill amount</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Floating Elements */}
-        <div className="absolute -bottom-2 -left-2 w-6 h-6 bg-yellow-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse"></div>
-        <div className="absolute -top-2 -right-2 w-4 h-4 bg-green-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-200 animate-pulse"></div>
-      </motion.div>
-    ))}
-  </div>
-
-  {/* Additional Info */}
-  <div className="text-center mt-8">
-    <div className="inline-flex items-center space-x-4 bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg border border-purple-100">
-      <div className="flex items-center space-x-2">
-        <span className="text-green-500 text-lg">✅</span>
-        <p className="text-gray-600 text-sm font-medium">Instant discount at payment</p>
-      </div>
-      <div className="w-px h-6 bg-gray-300"></div>
-      <div className="flex items-center space-x-2">
-        <span className="text-blue-500 text-lg">🔄</span>
-        <p className="text-gray-600 text-sm font-medium">No minimum wait time</p>
-      </div>
-      <div className="w-px h-6 bg-gray-300"></div>
-      <div className="flex items-center space-x-2">
-        <span className="text-purple-500 text-lg">🎯</span>
-        <p className="text-gray-600 text-sm font-medium">Applicable on all restaurants</p>
-      </div>
-    </div>
-  </div>
-
-  {/* How to Use Section */}
-  <div className="mt-8 bg-white rounded-2xl p-6 shadow-lg border border-gray-200 max-w-4xl mx-auto">
-    <h4 className="text-lg font-bold text-gray-800 mb-4 text-center">How to Use These Offers</h4>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div className="text-center p-4">
-        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-          <span className="text-blue-600 text-xl">1</span>
-        </div>
-        <h5 className="font-semibold text-gray-800 mb-2">Select Your Bank</h5>
-        <p className="text-gray-600 text-sm">Choose your preferred bank offer from the list above</p>
-      </div>
-      <div className="text-center p-4">
-        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-          <span className="text-green-600 text-xl">2</span>
-        </div>
-        <h5 className="font-semibold text-gray-800 mb-2">Apply Promo Code</h5>
-        <p className="text-gray-600 text-sm">Copy and apply the promo code during payment</p>
-      </div>
-      <div className="text-center p-4">
-        <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-          <span className="text-purple-600 text-xl">3</span>
-        </div>
-        <h5 className="font-semibold text-gray-800 mb-2">Enjoy Discount</h5>
-        <p className="text-gray-600 text-sm">Get instant discount on your final bill amount</p>
-      </div>
-    </div>
-  </div>
-</div>
         {/* Header */}
         <div className="text-center mb-12 md:mb-16 px-4 md:px-8">
           <motion.div 

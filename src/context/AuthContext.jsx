@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useContext } from "react";
 
 // Named export
 export const AuthContext = createContext();
@@ -17,15 +17,13 @@ export const AuthProvider = ({ children }) => {
         setLoading(true);
         const storedUser = localStorage.getItem("user");
         const storedToken = localStorage.getItem("token");
-        
-        if (storedUser) {
+
+        if (storedUser && storedToken) {
           const parsedUser = JSON.parse(storedUser);
-          // Validate token expiration if you have expiry time
           if (isTokenValid(parsedUser)) {
             setUser(parsedUser);
             setToken(storedToken);
           } else {
-            // Auto-logout if token is expired
             await performLogout();
           }
         }
@@ -39,29 +37,37 @@ export const AuthProvider = ({ children }) => {
     };
 
     initializeAuth();
+
+    // Multi-tab logout/login sync
+    const handleStorageChange = (e) => {
+      if (e.key === "user" || e.key === "token") {
+        const storedUser = localStorage.getItem("user");
+        const storedToken = localStorage.getItem("token");
+        setUser(storedUser ? JSON.parse(storedUser) : null);
+        setToken(storedToken || null);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   // Token validation helper
   const isTokenValid = (userData) => {
     if (!userData?.expiresAt) return true; // If no expiry, assume valid
-    
     const now = new Date().getTime();
     const expiry = new Date(userData.expiresAt).getTime();
     return now < expiry;
   };
 
-  // Enhanced login with validation
+  // Enhanced login
   const login = async (userData, tokenData, options = {}) => {
     try {
       setLoading(true);
       setAuthError(null);
 
-      // Validate inputs
-      if (!userData || !tokenData) {
-        throw new Error("Invalid login data");
-      }
+      if (!userData || !tokenData) throw new Error("Invalid login data");
 
-      // Add login timestamp and expiry if provided
       const enhancedUserData = {
         ...userData,
         loginTimestamp: new Date().toISOString(),
@@ -70,21 +76,16 @@ export const AuthProvider = ({ children }) => {
 
       setUser(enhancedUserData);
       setToken(tokenData);
-      
-      // Store in localStorage
+
       localStorage.setItem("user", JSON.stringify(enhancedUserData));
       localStorage.setItem("token", tokenData);
 
-      // Store additional auth data if needed
       if (options.rememberMe) {
         localStorage.setItem("rememberMe", "true");
       }
 
-      // Broadcast login event for other tabs
-      broadcastAuthChange('login');
-
+      broadcastAuthChange("login");
       return { success: true };
-
     } catch (error) {
       console.error("Login error:", error);
       setAuthError(error.message);
@@ -94,37 +95,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Enhanced logout with cleanup
-  const logout = async (options = {}) => {
-    return await performLogout(options);
-  };
+  // Logout
+  const logout = async (options = {}) => await performLogout(options);
 
-  // Actual logout implementation
   const performLogout = async (options = {}) => {
     try {
       setLoading(true);
-      
-      // Clear state
       setUser(null);
       setToken(null);
       setAuthError(null);
 
-      // Clear localStorage
       localStorage.removeItem("user");
       localStorage.removeItem("token");
-      
-      if (!options.keepRememberMe) {
-        localStorage.removeItem("rememberMe");
-      }
 
-      // Broadcast logout event for other tabs
-      broadcastAuthChange('logout');
+      if (!options.keepRememberMe) localStorage.removeItem("rememberMe");
 
-      // Optional: Call backend logout endpoint
+      broadcastAuthChange("logout");
+
+      // Optional: call backend logout endpoint
       if (options.callServer && token) {
         // await api.post('/logout', {}, { headers: { Authorization: `Bearer ${token}` }});
       }
-
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
@@ -134,8 +125,8 @@ export const AuthProvider = ({ children }) => {
 
   // Broadcast auth changes to other tabs
   const broadcastAuthChange = (action) => {
-    if (typeof BroadcastChannel !== 'undefined') {
-      const authChannel = new BroadcastChannel('auth');
+    if (typeof BroadcastChannel !== "undefined") {
+      const authChannel = new BroadcastChannel("auth");
       authChannel.postMessage({ action, user, timestamp: new Date().toISOString() });
     }
   };
@@ -153,71 +144,56 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Check if user has specific role
-  const hasRole = (role) => {
-    return user?.role === role || user?.roles?.includes(role);
-  };
+  // Role & Permission helpers
+  const hasRole = (role) => user?.role === role || user?.roles?.includes(role);
+  const hasPermission = (permission) => user?.permissions?.includes(permission);
 
-  // Check if user has specific permission
-  const hasPermission = (permission) => {
-    return user?.permissions?.includes(permission);
-  };
-
-  // Refresh token (placeholder for actual implementation)
+  // Placeholder for refresh token
   const refreshToken = async () => {
-    // Implement token refresh logic here
+    // Implement refresh token logic here
     // const newToken = await api.post('/refresh-token', { token });
     // setToken(newToken);
     // localStorage.setItem("token", newToken);
   };
 
-  // Clear auth error
   const clearError = () => setAuthError(null);
 
-  // Auth status information
+  // Auth status info
   const isAuthenticated = !!user && !!token;
   const authStatus = {
     isAuthenticated,
-    isAdmin: hasRole('admin'),
-    isUser: hasRole('user'),
+    isAdmin: hasRole("admin"),
+    isUser: hasRole("user"),
     isLoading: loading,
     hasError: !!authError,
   };
 
-  // Context value
   const contextValue = {
-    // State
     user,
     token,
     loading,
     error: authError,
-    
-    // Actions
     login,
     logout,
     updateUser,
     refreshToken,
     clearError,
-    
-    // Utilities
     hasRole,
     hasPermission,
     isAuthenticated,
     authStatus,
-    
-    // Enhanced info
-    userInitial: user?.name?.charAt(0)?.toUpperCase() || 'U',
+    userInitial: user?.name?.charAt(0)?.toUpperCase() || "U",
     loginTime: user?.loginTimestamp ? new Date(user.loginTimestamp) : null,
-    sessionDuration: user?.loginTimestamp 
-      ? Math.floor((new Date() - new Date(user.loginTimestamp)) / (1000 * 60)) 
+    sessionDuration: user?.loginTimestamp
+      ? Math.floor((new Date() - new Date(user.loginTimestamp)) / (1000 * 60))
       : 0,
   };
 
   return (
     <AuthContext.Provider value={contextValue}>
       {children}
-      
-      {/* Global Auth Loading Overlay */}
+
+      {/* Global Loading Overlay */}
       {loading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 flex flex-col items-center space-y-4">
@@ -251,21 +227,19 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Custom hook for using auth context
+// Custom hook
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };
 
-// HOC for protecting routes
+// HOC for protected routes
 export const withAuth = (Component) => {
   return function ProtectedComponent(props) {
     const { isAuthenticated, loading } = useAuth();
-    
-    if (loading) {
+
+    if (loading)
       return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
           <div className="text-center">
@@ -274,17 +248,16 @@ export const withAuth = (Component) => {
           </div>
         </div>
       );
-    }
-    
-    if (!isAuthenticated) {
+
+    if (!isAuthenticated)
       return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
           <div className="bg-white rounded-2xl p-8 text-center max-w-md">
             <div className="text-6xl mb-4">🔒</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h2>
             <p className="text-gray-600 mb-6">Please log in to access this page.</p>
-            <button 
-              onClick={() => window.location.href = '/login'}
+            <button
+              onClick={() => (window.location.href = "/login")}
               className="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors duration-300 font-medium"
             >
               Go to Login
@@ -292,18 +265,17 @@ export const withAuth = (Component) => {
           </div>
         </div>
       );
-    }
-    
+
     return <Component {...props} />;
   };
 };
 
-// HOC for role-based protection
+// HOC for role-based routes
 export const withRole = (role) => (Component) => {
   return function RoleProtectedComponent(props) {
     const { hasRole, isAuthenticated, user } = useAuth();
-    
-    if (!isAuthenticated || !hasRole(role)) {
+
+    if (!isAuthenticated || !hasRole(role))
       return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
           <div className="bg-white rounded-2xl p-8 text-center max-w-md">
@@ -313,10 +285,10 @@ export const withRole = (role) => (Component) => {
               You need <strong>{role}</strong> role to access this page.
             </p>
             <p className="text-sm text-gray-500 mb-6">
-              Your current role: <strong>{user?.role || 'None'}</strong>
+              Your current role: <strong>{user?.role || "None"}</strong>
             </p>
-            <button 
-              onClick={() => window.location.href = '/'}
+            <button
+              onClick={() => (window.location.href = "/")}
               className="px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors duration-300 font-medium"
             >
               Go Back
@@ -324,8 +296,7 @@ export const withRole = (role) => (Component) => {
           </div>
         </div>
       );
-    }
-    
+
     return <Component {...props} />;
   };
 };

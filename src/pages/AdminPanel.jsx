@@ -1,15 +1,64 @@
 import { useEffect, useState, useContext } from "react";
-import { getTables, createTable, deleteTable, updateTable } from "../services/tableService.js";
+import { getTables, deleteTable, updateTable } from "../services/tableService.js";
 import { AuthContext } from "../context/AuthContext.jsx";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { 
+  Plus, 
+  RefreshCw, 
+  Edit, 
+  Trash2, 
+  Shield, 
+  CheckCircle, 
+  XCircle, 
+  Users,
+  Table as TableIcon,
+  MapPin,
+  Star,
+  AlertCircle
+} from "lucide-react";
+
+const TableImageCarousel = ({ images }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (images.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+      }, 3000);
+      return () => clearInterval(timer);
+    }
+  }, [images.length]);
+
+  if (!images || images.length === 0) {
+    return (
+      <img 
+        src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80' 
+        alt="Default table"
+        className="w-full h-48 object-cover"
+      />
+    );
+  }
+
+  return (
+    <div className="relative w-full h-48 overflow-hidden">
+      {images.map((image, index) => (
+        <img
+          key={index}
+          src={image}
+          alt={`Table view ${index + 1}`}
+          className={`absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-1000 ${
+            index === currentIndex ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      ))}
+    </div>
+  );
+};
 
 const AdminPanel = () => {
   const { user, token } = useContext(AuthContext);
   const [tables, setTables] = useState([]);
-  const [tableNumber, setTableNumber] = useState("");
-  const [seats, setSeats] = useState("");
-  const [editTableId, setEditTableId] = useState(null);
-  const [editTableNumber, setEditTableNumber] = useState("");
-  const [editSeats, setEditSeats] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState("");
@@ -43,27 +92,6 @@ const AdminPanel = () => {
     }
   }, [user]);
 
-  const handleAddTable = async () => {
-    if (!tableNumber || !seats) {
-      setError("Please enter table number and seats");
-      return;
-    }
-    setLoading(true);
-    try {
-      await createTable({ tableNumber, seats }, token);
-      setTableNumber("");
-      setSeats("");
-      setError("");
-      showSuccess("Table added successfully!");
-      fetchTables();
-    } catch (err) {
-      console.error("Add table error:", err.message);
-      setError(`Failed to add table: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleDeleteTable = async (id) => {
     if (!window.confirm("Are you sure you want to delete this table?")) return;
     setLoading(true);
@@ -79,340 +107,318 @@ const AdminPanel = () => {
     }
   };
 
-  const handleEditTable = (table) => {
-    setEditTableId(table._id);
-    setEditTableNumber(table.tableNumber);
-    setEditSeats(table.seats);
-  };
-
-  const handleUpdateTable = async () => {
-    if (!editTableNumber || !editSeats) {
-      setError("Please enter table number and seats");
-      return;
-    }
-    setLoading(true);
-    try {
-      await updateTable(editTableId, { tableNumber: editTableNumber, seats: editSeats }, token);
-      setEditTableId(null);
-      setEditTableNumber("");
-      setEditSeats("");
-      setError("");
-      showSuccess("Table updated successfully!");
-      fetchTables();
-    } catch (err) {
-      console.error("Update table error:", err.message);
-      setError(`Failed to update table: ${err.message}`);
-    } finally {
-      setLoading(false);
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
     }
   };
 
-  const handleCancelEdit = () => {
-    setEditTableId(null);
-    setEditTableNumber("");
-    setEditSeats("");
-    setError("");
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
   };
 
   if (user?.role !== "admin") return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-100 flex items-center justify-center p-6">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 flex items-center justify-center p-6">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center"
+      >
+        <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Shield className="w-10 h-10 text-red-600" />
         </div>
-        <h3 className="text-xl font-bold text-gray-800 mb-2">Access Denied</h3>
-        <p className="text-gray-600">Admin privileges required to access this page.</p>
-      </div>
+        <h3 className="text-2xl font-bold text-gray-800 mb-3">Access Denied</h3>
+        <p className="text-gray-600 mb-6">Admin privileges required to access this page.</p>
+        <Link
+          to="/"
+          className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-colors inline-flex items-center"
+        >
+          Return to Home
+        </Link>
+      </motion.div>
     </div>
   );
 
+  const availableTables = tables.filter(table => table.isAvailable);
+  const bookedTables = tables.filter(table => !table.isAvailable);
+  const totalSeats = tables.reduce((sum, table) => sum + (table.seats || 0), 0);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 p-6">
+      <motion.div
+        className="max-w-7xl mx-auto"
+        initial="hidden"
+        animate="show"
+        variants={containerVariants}
+      >
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-3">Table Management</h1>
+        <motion.div variants={itemVariants} className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">Table Management</h1>
           <p className="text-gray-600 text-lg">Manage your restaurant tables and seating arrangements</p>
-        </div>
+        </motion.div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
+        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500 hover:shadow-xl transition-all duration-300">
             <div className="flex items-center">
-              <div className="bg-blue-100 p-3 rounded-lg mr-4">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
+              <div className="bg-blue-100 p-3 rounded-xl mr-4">
+                <TableIcon className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Total Tables</p>
+                <p className="text-sm text-gray-600 font-medium">Total Tables</p>
                 <p className="text-2xl font-bold text-gray-800">{tables.length}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500 hover:shadow-xl transition-all duration-300">
             <div className="flex items-center">
-              <div className="bg-green-100 p-3 rounded-lg mr-4">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
+              <div className="bg-green-100 p-3 rounded-xl mr-4">
+                <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Available</p>
-                <p className="text-2xl font-bold text-gray-800">
-                  {tables.filter(t => t.available).length}
-                </p>
+                <p className="text-sm text-gray-600 font-medium">Available</p>
+                <p className="text-2xl font-bold text-gray-800">{availableTables.length}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-red-500 hover:shadow-xl transition-all duration-300">
             <div className="flex items-center">
-              <div className="bg-red-100 p-3 rounded-lg mr-4">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <div className="bg-red-100 p-3 rounded-xl mr-4">
+                <XCircle className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Booked</p>
-                <p className="text-2xl font-bold text-gray-800">
-                  {tables.filter(t => !t.available).length}
-                </p>
+                <p className="text-sm text-gray-600 font-medium">Booked</p>
+                <p className="text-2xl font-bold text-gray-800">{bookedTables.length}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-500">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500 hover:shadow-xl transition-all duration-300">
             <div className="flex items-center">
-              <div className="bg-purple-100 p-3 rounded-lg mr-4">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+              <div className="bg-purple-100 p-3 rounded-xl mr-4">
+                <Users className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Total Seats</p>
-                <p className="text-2xl font-bold text-gray-800">
-                  {tables.reduce((sum, table) => sum + table.seats, 0)}
-                </p>
+                <p className="text-sm text-gray-600 font-medium">Total Seats</p>
+                <p className="text-2xl font-bold text-gray-800">{totalSeats}</p>
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Add Table Form */}
-        <div className="bg-white rounded-2xl shadow-sm p-8 mb-8 border border-gray-100">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-            <svg className="w-6 h-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Add New Table
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Table Number</label>
-              <input
-                type="number"
-                placeholder="e.g., 101"
-                value={tableNumber}
-                onChange={(e) => setTableNumber(e.target.value)}
-                className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                disabled={loading}
-              />
+        {/* Quick Actions Card */}
+        <motion.div variants={itemVariants} className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-100">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="flex items-center">
+              <div className="w-2 h-8 bg-indigo-500 rounded-full mr-4"></div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">Table Management</h3>
+                <p className="text-gray-600">Add new tables or manage existing ones</p>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Number of Seats</label>
-              <input
-                type="number"
-                placeholder="e.g., 4"
-                value={seats}
-                onChange={(e) => setSeats(e.target.value)}
-                className="w-full p-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                disabled={loading}
-              />
-            </div>
-            <div className="flex items-end">
+            <div className="flex gap-4">
               <button
-                onClick={handleAddTable}
+                onClick={fetchTables}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:transform-none flex items-center justify-center"
+                className="bg-gray-100 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-200 transition-all duration-200 disabled:opacity-50 flex items-center font-semibold"
               >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Adding Table...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Add Table
-                  </>
-                )}
+                <RefreshCw className={`w-5 h-5 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
               </button>
+              <Link
+                to="/admin/add-table"
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200 transform hover:-translate-y-0.5 flex items-center justify-center shadow-lg hover:shadow-xl"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add New Table
+              </Link>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Notifications */}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center">
-            <svg className="w-5 h-5 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="text-red-800">{error}</span>
-          </div>
+          <motion.div
+            variants={itemVariants}
+            className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center"
+          >
+            <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
+            <span className="text-red-800 font-medium">{error}</span>
+          </motion.div>
         )}
 
         {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center">
-            <svg className="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="text-green-800">{success}</span>
-          </div>
+          <motion.div
+            variants={itemVariants}
+            className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center"
+          >
+            <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+            <span className="text-green-800 font-medium">{success}</span>
+          </motion.div>
         )}
 
         {/* Tables Grid */}
-        <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold text-gray-800 flex items-center">
-              <svg className="w-6 h-6 text-gray-700 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              Restaurant Tables
-            </h3>
-            <button
-              onClick={fetchTables}
-              className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors duration-200 flex items-center"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </button>
+        <motion.div variants={itemVariants} className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center">
+              <div className="w-2 h-8 bg-indigo-500 rounded-full mr-4"></div>
+              <h3 className="text-2xl font-bold text-gray-900">Restaurant Tables</h3>
+            </div>
+            <div className="text-sm text-gray-500 font-medium">
+              Showing {tables.length} table{tables.length !== 1 ? 's' : ''}
+            </div>
           </div>
 
           {loading && (
-            <div className="text-center py-8">
-              <div className="inline-flex items-center">
-                <svg className="animate-spin -ml-1 mr-3 h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span className="text-gray-600 text-lg">Loading tables...</span>
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center">
+                <RefreshCw className="animate-spin w-8 h-8 text-indigo-600 mr-4" />
+                <span className="text-gray-600 text-lg font-medium">Loading tables...</span>
               </div>
             </div>
           )}
 
           {tables.length === 0 && !loading && !error && (
-            <div className="text-center py-12">
-              <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-              </svg>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No tables available</h3>
-              <p className="text-gray-500">Get started by adding your first table above.</p>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-16"
+            >
+              <TableIcon className="w-20 h-20 text-gray-400 mx-auto mb-6" />
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">No tables available</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                Get started by adding your first table to manage reservations and seating arrangements.
+              </p>
+              <Link
+                to="/admin/add-table"
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 inline-flex items-center shadow-lg hover:shadow-xl"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Your First Table
+              </Link>
+            </motion.div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {tables.map((table) => (
-              <div
+              <motion.div
                 key={table._id}
-                className={`rounded-xl shadow-sm border-2 p-6 transition-all duration-200 hover:shadow-md ${
-                  table.available 
-                    ? 'border-green-200 bg-green-50 hover:border-green-300' 
-                    : 'border-red-200 bg-red-50 hover:border-red-300'
-                }`}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-2xl transition-all duration-300 flex flex-col group"
               >
-                {editTableId === table._id ? (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Table Number</label>
-                      <input
-                        type="number"
-                        value={editTableNumber}
-                        onChange={(e) => setEditTableNumber(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Seats</label>
-                      <input
-                        type="number"
-                        value={editSeats}
-                        onChange={(e) => setEditSeats(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleUpdateTable}
-                        disabled={loading}
-                        className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 disabled:bg-green-300 flex items-center justify-center"
-                      >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Save
-                      </button>
-                      <button
-                        onClick={handleCancelEdit}
-                        className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors duration-200"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h4 className="text-xl font-bold text-gray-800">Table {table.tableNumber}</h4>
-                        <p className="text-gray-600">{table.seats} seats</p>
-                      </div>
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                        table.available 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {table.available ? 'Available' : 'Booked'}
+                {/* Image Section */}
+                <div className="relative overflow-hidden">
+                  <TableImageCarousel images={table.restaurantImages || []} />
+                  <div className="absolute top-3 right-3 flex flex-col gap-2">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
+                      table.isAvailable 
+                        ? 'bg-green-100 text-green-800 ring-1 ring-inset ring-green-600/20' 
+                        : 'bg-red-100 text-red-800 ring-1 ring-inset ring-red-600/20'
+                    }`}>
+                      {table.isAvailable ? 'Available' : 'Booked'}
+                    </span>
+                    {table.tableClass && table.tableClass !== 'general' && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 ring-1 ring-inset ring-purple-600/20">
+                        <Star className="w-3 h-3 mr-1" />
+                        {table.tableClass}
                       </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Content Section */}
+                <div className="p-5 flex flex-col flex-grow">
+                  <div className="flex-grow">
+                    {/* Title and Seats */}
+                    <div className="flex justify-between items-baseline mb-3">
+                      <h4 className="text-xl font-bold text-gray-900">Table {table.tableNumber}</h4>
+                      <p className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">
+                        {table.seats} {table.seats === 1 ? 'seat' : 'seats'}
+                      </p>
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEditTable(table)}
-                        className="flex-1 bg-yellow-500 text-white px-3 py-2 rounded-lg hover:bg-yellow-600 transition-colors duration-200 flex items-center justify-center"
-                      >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTable(table._id)}
-                        disabled={loading}
-                        className="flex-1 bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200 disabled:bg-red-300 flex items-center justify-center"
-                      >
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        Delete
-                      </button>
+
+                    {/* Price and Features */}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Price:</span>
+                        <span className="font-bold text-gray-900">₹{table.price || 'N/A'}</span>
+                      </div>
+                      
+                      {table.location?.address && (
+                        <div className="flex items-center text-sm text-gray-500">
+                          <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                          <span className="truncate">{table.location.address}</span>
+                        </div>
+                      )}
                     </div>
-                  </>
-                )}
-              </div>
+
+                    {/* Features Preview */}
+                    {table.classFeatures && table.classFeatures.length > 0 && (
+                      <div className="mb-4">
+                        <div className="flex flex-wrap gap-1">
+                          {table.classFeatures.slice(0, 3).map((feature, index) => (
+                            <span
+                              key={index}
+                              className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-md"
+                            >
+                              {feature}
+                            </span>
+                          ))}
+                          {table.classFeatures.length > 3 && (
+                            <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-md">
+                              +{table.classFeatures.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 mt-auto pt-4 border-t border-gray-100">
+                    <Link
+                      to={`/admin/edit-table/${table._id}`}
+                      className="flex-1 bg-indigo-50 text-indigo-700 px-3 py-2 rounded-xl hover:bg-indigo-100 transition-all duration-200 flex items-center justify-center font-semibold text-sm group/edit"
+                    >
+                      <Edit className="w-4 h-4 mr-2 group-hover/edit:scale-110 transition-transform" />
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => handleDeleteTable(table._id)}
+                      disabled={loading}
+                      className="flex-1 bg-red-50 text-red-700 px-3 py-2 rounded-xl hover:bg-red-100 transition-all duration-200 disabled:opacity-50 flex items-center justify-center font-semibold text-sm group/delete"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2 group-hover/delete:scale-110 transition-transform" />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
             ))}
           </div>
-        </div>
-      </div>
+        </motion.div>
+
+        {/* Footer Stats */}
+        {tables.length > 0 && (
+          <motion.div variants={itemVariants} className="mt-8 text-center">
+            <p className="text-gray-600 text-sm">
+              Showing {tables.length} table{tables.length !== 1 ? 's' : ''} • 
+              {' '}{availableTables.length} available • 
+              {' '}{bookedTables.length} booked • 
+              {' '}Total capacity: {totalSeats} seats
+            </p>
+          </motion.div>
+        )}
+      </motion.div>
     </div>
   );
 };
