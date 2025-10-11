@@ -12,7 +12,7 @@ const Navbar = () => {
   const handleLogout = () => {
     logout();
     navigate("/login");
-    setIsMenuOpen(false);
+    setIsMenuOpen(false);   
   };
 
   const handleBookTableClick = () => {
