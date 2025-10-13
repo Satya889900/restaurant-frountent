@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from "react";
-import { getMyBookings, cancelBooking, updateBooking } from "../services/bookingService.js";
+import { getMyBookings, cancelBooking, updateBooking, deleteBooking  } from "../services/bookingService.js";
 import { AuthContext } from "../context/AuthContext.jsx";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -8,6 +8,7 @@ const Bookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [editingBooking, setEditingBooking] = useState(null); // State for the booking being edited
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
@@ -77,6 +78,22 @@ const Bookings = () => {
       setLoading(false);
     }
   };
+  const handleDelete = async (id) => {
+  if (!window.confirm("Are you sure you want to delete this table booking permanently?")) return;
+  
+  setDeletingId(id);
+  try {
+    await deleteBooking(id, token);
+    showPopup("Table booking deleted successfully!", "success");
+    fetchBookings();
+  } catch (err) {
+    console.error(err);
+    showPopup("Failed to delete booking", "error");
+  } finally {
+    setDeletingId(null);
+  }
+};
+
 
   const getStatusColor = (status) => {
     return {
@@ -266,40 +283,69 @@ const Bookings = () => {
                     </div>
                   ))}
                 </div>
+                
 
                 {/* Action */}
-                {b.status !== "cancelled" && b.status !== "completed" ? (
-                  <div className="flex gap-2 mt-4">
+                <div className="mt-4 space-y-2">
+                  {b.status !== "cancelled" && b.status !== "completed" && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEdit(b)}
+                        className="flex-1 py-3 px-4 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all duration-300 font-medium border border-blue-200 flex items-center justify-center space-x-2"
+                      >
+                        <span>✏️</span>
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => handleCancel(b._id)}
+                        disabled={cancellingId === b._id}
+                        className="flex-1 py-3 px-4 bg-yellow-50 text-yellow-600 rounded-xl hover:bg-yellow-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium border border-yellow-200 flex items-center justify-center space-x-2"
+                      >
+                        {cancellingId === b._id ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-yellow-600 border-t-transparent rounded-full animate-spin"></div>
+                            <span>Cancelling...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>🚫</span>
+                            <span>Cancel</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {b.status === "completed" ? (
+                    <div className="w-full py-3 px-4 bg-gray-50 text-gray-600 rounded-xl text-center font-medium border border-gray-200">
+                      Booking Completed
+                    </div>
+                  ) : (
                     <button
-                      onClick={() => handleEdit(b)}
-                      className="flex-1 py-3 px-4 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all duration-300 font-medium border border-blue-200 flex items-center justify-center space-x-2"
+                      onClick={() => handleDelete(b._id)}
+                      disabled={deletingId === b._id || cancellingId === b._id}
+                      className="w-full py-3 px-4 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium border border-red-200 flex items-center justify-center space-x-2"
                     >
-                      <span>✏️</span>
-                      <span>Edit</span>
-                    </button>
-                    <button
-                      onClick={() => handleCancel(b._id)}
-                      disabled={cancellingId === b._id}
-                      className="flex-1 py-3 px-4 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium border border-red-200 flex items-center justify-center space-x-2"
-                    >
-                      {cancellingId === b._id ? (
+                      {deletingId === b._id ? (
                         <>
                           <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-                          <span>Cancelling...</span>
+                          <span>Deleting...</span>
                         </>
                       ) : (
                         <>
-                          <span>❌</span>
-                          <span>Cancel</span>
+                          <span>🗑️</span>
+                          <span>Delete</span>
                         </>
                       )}
                     </button>
-                  </div>
-                ) : (
+                  )}
+                </div>
+                {/* This block is now handled above */}
+                {/* {b.status === "cancelled" || b.status === "completed" ? (
                   <div className="mt-4 w-full py-3 px-4 bg-gray-50 text-gray-600 rounded-xl text-center font-medium border border-gray-200">
                     {b.status === "cancelled" ? "Booking Cancelled" : "Booking Completed"}
                   </div>
-                )}
+                ) : null} */}
               </div>
             ))}
           </div>

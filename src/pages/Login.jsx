@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from "react";
-import { login as loginUser } from "../services/authService.js";
 import { AuthContext } from "../context/AuthContext.jsx";
 import { useNavigate, Link } from "react-router-dom";
+
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -24,11 +24,11 @@ const Login = () => {
     
     setIsLoading(true);
     try {
-      const data = await loginUser({ email, password });
-      login(data.user, data.token);
+      // Pass option to prevent global loader, as we have a local one
+      await login(email, password, { localLoading: true });
     } catch (err) {
-      console.error(err.response?.data || err);
-      alert(err.response?.data?.message || "Login failed");
+      console.error(err);
+      alert(err.message || "Login failed");
     } finally {
       setIsLoading(false);
     }

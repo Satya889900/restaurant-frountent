@@ -48,3 +48,33 @@ export const getCurrentUser = async (token) => {
     throw new Error(error.response?.data?.message || "Failed to fetch user data");
   }
 };
+
+/**
+ * Request a password reset OTP
+ * @param {string} email User's email
+ * @returns {Promise<Object>} Success message
+ */
+export const requestPasswordReset = async (email) => {
+  try {
+    const res = await axios.post(`${API_URL}/forgot-password`, { email });
+    return res.data;
+  } catch (error) {
+    console.error("Error requesting password reset:", error);
+    throw new Error(error.response?.data?.message || "Failed to send OTP");
+  }
+};
+
+/**
+ * Reset user's password using OTP
+ * @param {Object} data { email, otp, password }
+ * @returns {Promise<Object>} Success message
+ */
+export const resetPassword = async (data) => {
+  try {
+    const res = await axios.post(`${API_URL}/reset-password`, data);
+    return res.data;
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    throw new Error(error.response?.data?.message || "Failed to reset password");
+  }
+};

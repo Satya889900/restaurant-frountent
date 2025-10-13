@@ -9,7 +9,12 @@ import AdminPanel from "./pages/AdminPanel.jsx";
 import AdminAddTable from "./pages/AdminAddTable.jsx"; // 1. Import the new component
 import AdminEditTable from "./pages/AdminEditTable.jsx";
 import Bookings from "./pages/Bookings.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
 import PrivateRoute from "./pages/PrivateRoute.jsx";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+
 
 function App() {
   return (
@@ -21,6 +26,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             
             {/* Protected Routes */}
             <Route

@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 import { Users, Clock, MapPin, Star, CheckCircle, XCircle, Crown, Tag } from "lucide-react";
+import TableImageCarousel from "./TableImageCarousel.jsx";
 
 const TableCard = ({ table, onBook }) => {
   const isAvailable = table.isAvailable !== undefined ? table.isAvailable : table.available;
   const tablePrice = table.price || (table.seats * 15);
-  const tableImage = table.restaurantImage || table.restaurantImages?.[0];
   const activeOffers = table.offers?.filter(offer => offer.active) || [];
   
   // Determine table type based on seats
@@ -76,13 +76,8 @@ const TableCard = ({ table, onBook }) => {
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -skew-x-12 transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
 
         {/* Image Section */}
-        {tableImage && (
-          <div className="relative h-48 overflow-hidden">
-            <img 
-              src={tableImage} 
-              alt={`Table ${table.tableNumber}`}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-            />
+        <div className="relative h-48 overflow-hidden">
+            <TableImageCarousel images={table.restaurantImages} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
             
             {/* Premium Badge */}
@@ -110,8 +105,7 @@ const TableCard = ({ table, onBook }) => {
                 {isAvailable ? 'Available' : 'Booked'}
               </div>
             </div>
-          </div>
-        )}
+        </div>
 
         {/* Content Section */}
         <div className="relative z-10 p-6">

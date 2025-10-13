@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect, useContext } from "react";
+import { login as loginService } from "../services/authService";
 
 // Named export
 export const AuthContext = createContext();
@@ -61,26 +62,30 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Enhanced login
-  const login = async (userData, tokenData, options = {}) => {
+  const login = async (email, password, options = {}) => {
     try {
-      setLoading(true);
+      // Only show global loader if not handled locally
+      if (!options.localLoading) {
+        setLoading(true);
+      }
       setAuthError(null);
 
-      if (!userData || !tokenData) throw new Error("Invalid login data");
+      // Call the login service
+      const data = await loginService({ email, password });
 
       const enhancedUserData = {
-        ...userData,
+        ...data, // The user object from the API response
         loginTimestamp: new Date().toISOString(),
         expiresAt: options.expiresAt || null,
       };
 
       setUser(enhancedUserData);
-      setToken(tokenData);
+      setToken(data.token);
 
       localStorage.setItem("user", JSON.stringify(enhancedUserData));
-      localStorage.setItem("token", tokenData);
+      localStorage.setItem("token", data.token);
 
-      if (options.rememberMe) {
+      if (options?.rememberMe) {
         localStorage.setItem("rememberMe", "true");
       }
 
@@ -91,7 +96,9 @@ export const AuthProvider = ({ children }) => {
       setAuthError(error.message);
       return { success: false, error: error.message };
     } finally {
-      setLoading(false);
+      if (!options.localLoading) {
+        setLoading(false);
+      }
     }
   };
 
@@ -282,7 +289,7 @@ export const withRole = (role) => (Component) => {
             <div className="text-6xl mb-4">🚫</div>
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Insufficient Permissions</h2>
             <p className="text-gray-600 mb-4">
-              You need <strong>{role}</strong> role to access this page.
+               You need <strong>{role}</strong> role to access this page.
             </p>
             <p className="text-sm text-gray-500 mb-6">
               Your current role: <strong>{user?.role || "None"}</strong>

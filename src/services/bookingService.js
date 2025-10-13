@@ -72,6 +72,12 @@ export const cancelBooking = async (bookingId, token) => {
     throw new Error(error.response?.data?.message || "Failed to cancel booking");
   }
 };
+export const deleteBooking = async (id, token) => {
+  const response = await axios.delete(`${API_URL}/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
 
 /**
  * Update a booking (optional, backend dependent)
