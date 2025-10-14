@@ -21,7 +21,7 @@ import { Utensils, StickyNote, Tag, ChefHat } from "lucide-react";
 import TableImageCarousel from "../components/TableImageCarousel.jsx";
 
 const AdminPanel = () => {
-  const { user, token } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -39,7 +39,7 @@ const AdminPanel = () => {
       const now = new Date();
       const date = now.toISOString().split("T")[0];
       const time = now.toTimeString().split(" ")[0];
-      const data = await getTables(date, time, token);
+      const data = await getTables(date, time, user?.token);
       setTables(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Fetch error:", err.message);
@@ -60,7 +60,7 @@ const AdminPanel = () => {
     if (!window.confirm("Are you sure you want to delete this table?")) return;
     setLoading(true);
     try {
-      await deleteTable(id, token);
+      await deleteTable(id, user?.token);
       showSuccess("Table deleted successfully!");
       fetchTables();
     } catch (err) {

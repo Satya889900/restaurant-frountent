@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getTableById, updateTable } from "../services/tableService.js";
+import { getTableById, updateTable, createTable } from "../services/tableService.js";
 import { AuthContext } from "../context/AuthContext.jsx";
 import { motion } from "framer-motion";
 import { Plus, Trash2, Upload, X, ChevronLeft, ChevronRight } from "lucide-react";
@@ -21,14 +21,24 @@ const ImageCarousel = ({ images, onImagesUpdate }) => {
   };
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const newImageUrl = event.target.result;
-        onImagesUpdate([...images, newImageUrl]);
-      };
-      reader.readAsDataURL(file);
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      const fileReadPromises = files.map(file => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            resolve({
+              url: event.target.result, // For preview
+              file: file, // The actual file object
+            });
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+
+      Promise.all(fileReadPromises).then(newImages => {
+        onImagesUpdate([...images, ...newImages]);
+      });
     }
   };
 
@@ -53,6 +63,7 @@ const ImageCarousel = ({ images, onImagesUpdate }) => {
           <input
             type="file"
             accept="image/*"
+            multiple
             onChange={handleImageUpload}
             className="hidden"
           />
@@ -66,7 +77,7 @@ const ImageCarousel = ({ images, onImagesUpdate }) => {
       {/* Main Image Display */}
       <div className="relative h-80 md:h-96">
         <img
-          src={images[currentIndex]}
+          src={images[currentIndex]?.url || images[currentIndex]} // Handle both object and string URLs
           alt={`Table view ${currentIndex + 1}`}
           className="w-full h-full object-cover"
         />
@@ -118,7 +129,7 @@ const ImageCarousel = ({ images, onImagesUpdate }) => {
               onClick={() => setCurrentIndex(index)}
             >
               <img
-                src={image}
+                src={image.url || image} // Handle both object and string URLs
                 alt={`Thumbnail ${index + 1}`}
                 className="w-full h-full object-cover"
               />
@@ -139,6 +150,7 @@ const ImageCarousel = ({ images, onImagesUpdate }) => {
             <input
               type="file"
               accept="image/*"
+              multiple
               onChange={handleImageUpload}
               className="hidden"
             />
@@ -152,7 +164,7 @@ const ImageCarousel = ({ images, onImagesUpdate }) => {
 const AdminEditTable = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { token } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
     tableNumber: "",
@@ -171,6 +183,7 @@ const AdminEditTable = () => {
 
   const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [newImageFiles, setNewImageFiles] = useState([]);
 
   useEffect(() => {
     const fetchTableData = async () => {
@@ -181,7 +194,10 @@ const AdminEditTable = () => {
           tableNumber: table.tableNumber || "",
           seats: table.seats || "",
           isAvailable: table.isAvailable !== undefined ? table.isAvailable : true,
-          restaurantImages: table.restaurantImages || table.restaurantImage ? [table.restaurantImage] : [], // Handles both old and new field
+          // Ensure restaurantImages are just URLs on initial load
+          restaurantImages: (table.restaurantImages || (table.restaurantImage ? [table.restaurantImage] : [])).map(img => 
+            typeof img === 'object' ? img.url : img
+          ),
           location: table.location?.address || "",
           foodTypes: (table.foodTypes || []).join(", "),
           foodMenu: (table.foodMenu || []).length > 0 ? table.foodMenu : [{ name: "", price: "", veg: true, isAvailable: true }],
@@ -254,7 +270,13 @@ const AdminEditTable = () => {
   };
 
   const handleImagesUpdate = (newImages) => {
-    setFormData({ ...formData, restaurantImages: newImages });
+    // newImages can be a mix of strings (existing URLs) and objects { url, file }
+    const urls = newImages.map(img => img.url || img);
+    const files = newImages
+      .map(img => img.file)
+      .filter(Boolean); // Filter out undefined for existing images
+    setFormData({ ...formData, restaurantImages: urls });
+    setNewImageFiles(files);
   };
 
   const handleSubmit = async (e) => {
@@ -278,7 +300,7 @@ const AdminEditTable = () => {
         })),
       };
 
-      await updateTable(id, dataToSend, token);
+      await updateTable(id, dataToSend, newImageFiles, user?.token);
       setMessage({ text: "✅ Table updated successfully! Redirecting...", type: "success" });
       setTimeout(() => navigate("/admin"), 1500);
     } catch (err) {

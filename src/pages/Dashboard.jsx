@@ -3,21 +3,21 @@ import { AuthContext } from "../context/AuthContext.jsx";
 import { getTables } from "../services/tableService.js";
 
 const Dashboard = () => {
-  const { user, token } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [tables, setTables] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   // Fetch tables from backend
   const fetchTables = async () => {
-    if (!token) return;
+    if (!user?.token) return;
     setLoading(true);
     setError("");
     try {
       const now = new Date();
       const date = now.toISOString().split("T")[0];
       const time = now.toTimeString().split(" ")[0];
-      const data = await getTables(date, time, token);
+      const data = await getTables(date, time, user.token);
       setTables(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Dashboard fetch error:", err.message);

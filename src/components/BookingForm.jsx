@@ -5,7 +5,7 @@ import { AuthContext } from "../context/AuthContext.jsx";
 import { motion } from "framer-motion";
 
 const BookingForm = () => {
-  const { user, token } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [tables, setTables] = useState([]);
   const [formData, setFormData] = useState({
     table: "",
@@ -35,7 +35,7 @@ const BookingForm = () => {
         endTime: formData.endTime,
       };
 
-      const result = await createBooking(bookingData, token);
+      const result = await createBooking(bookingData, user?.token);
       setMessage("✅ Booking created successfully!");
       console.log("Booking response:", result);
       setFormData({ table: "", startTime: "", endTime: "" });

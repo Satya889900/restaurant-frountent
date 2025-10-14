@@ -7,7 +7,6 @@ export const AuthContext = createContext();
 // AuthProvider component
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
 
@@ -16,14 +15,12 @@ export const AuthProvider = ({ children }) => {
     const initializeAuth = async () => {
       try {
         setLoading(true);
-        const storedUser = localStorage.getItem("user");
-        const storedToken = localStorage.getItem("token");
+        const storedUserJSON = localStorage.getItem("user");
 
-        if (storedUser && storedToken) {
-          const parsedUser = JSON.parse(storedUser);
+        if (storedUserJSON) {
+          const parsedUser = JSON.parse(storedUserJSON);
           if (isTokenValid(parsedUser)) {
-            setUser(parsedUser);
-            setToken(storedToken);
+            setUser(parsedUser); // The user object contains the token
           } else {
             await performLogout();
           }
@@ -42,10 +39,8 @@ export const AuthProvider = ({ children }) => {
     // Multi-tab logout/login sync
     const handleStorageChange = (e) => {
       if (e.key === "user" || e.key === "token") {
-        const storedUser = localStorage.getItem("user");
-        const storedToken = localStorage.getItem("token");
-        setUser(storedUser ? JSON.parse(storedUser) : null);
-        setToken(storedToken || null);
+        const storedUserJSON = localStorage.getItem("user");
+        setUser(storedUserJSON ? JSON.parse(storedUserJSON) : null);
       }
     };
 
@@ -80,10 +75,8 @@ export const AuthProvider = ({ children }) => {
       };
 
       setUser(enhancedUserData);
-      setToken(data.token);
 
       localStorage.setItem("user", JSON.stringify(enhancedUserData));
-      localStorage.setItem("token", data.token);
 
       if (options?.rememberMe) {
         localStorage.setItem("rememberMe", "true");
@@ -109,14 +102,13 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       setUser(null);
-      setToken(null);
       setAuthError(null);
 
       localStorage.removeItem("user");
-      localStorage.removeItem("token");
 
       if (!options.keepRememberMe) localStorage.removeItem("rememberMe");
 
+      // The broadcast channel can still be used to sync logout across tabs
       broadcastAuthChange("logout");
 
       // Optional: call backend logout endpoint
@@ -166,18 +158,17 @@ export const AuthProvider = ({ children }) => {
   const clearError = () => setAuthError(null);
 
   // Auth status info
-  const isAuthenticated = !!user && !!token;
+  const isAuthenticated = !!user && !!user.token;
   const authStatus = {
     isAuthenticated,
     isAdmin: hasRole("admin"),
     isUser: hasRole("user"),
     isLoading: loading,
-    hasError: !!authError,
+    hasError: !!authError
   };
 
   const contextValue = {
     user,
-    token,
     loading,
     error: authError,
     login,
@@ -187,12 +178,12 @@ export const AuthProvider = ({ children }) => {
     clearError,
     hasRole,
     hasPermission,
-    isAuthenticated,
+    isAuthenticated, // Directly from authStatus
     authStatus,
     userInitial: user?.name?.charAt(0)?.toUpperCase() || "U",
     loginTime: user?.loginTimestamp ? new Date(user.loginTimestamp) : null,
     sessionDuration: user?.loginTimestamp
-      ? Math.floor((new Date() - new Date(user.loginTimestamp)) / (1000 * 60))
+      ? Math.floor((Date.now() - new Date(user.loginTimestamp).getTime()) / 60000)
       : 0,
   };
 

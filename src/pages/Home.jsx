@@ -30,7 +30,7 @@ const Home = () => {
   const [selectedTime, setSelectedTime] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const { user, token } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [popup, setPopup] = useState({ show: false, message: "", type: "success" });
   const [bookingModal, setBookingModal] = useState({ isOpen: false, table: null });
   const [selectedOffer, setSelectedOffer] = useState(null);
@@ -233,7 +233,7 @@ const Home = () => {
   }, [tables]);
 
   const handleBook = async (tableId) => {
-    if (!user || !token) return showPopup("Please login to book a table", "error");
+    if (!user || !user.token) return showPopup("Please login to book a table", "error");
     if (!tableId) return showPopup("Invalid table", "error");
     if (!selectedDate || !selectedTime) return showPopup("Please select a date and time", "error");
 
@@ -246,7 +246,7 @@ const Home = () => {
         table: tableId, 
         startTime: dateTime.toISOString(),
         offerTitle: selectedOffer,
-      }, token);
+      }, user.token);
 
       showPopup("Table booked successfully!");
       setBookingModal({ isOpen: false, table: null });

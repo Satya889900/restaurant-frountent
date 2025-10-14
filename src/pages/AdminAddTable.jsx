@@ -21,14 +21,24 @@ const ImageCarousel = ({ images, onImagesUpdate }) => {
   };
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const newImageUrl = event.target.result;
-        onImagesUpdate([...images, newImageUrl]);
-      };
-      reader.readAsDataURL(file);
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      const fileReadPromises = files.map(file => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            resolve({
+              url: event.target.result, // For preview
+              file: file, // The actual file object
+            });
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+
+      Promise.all(fileReadPromises).then(newImages => {
+        onImagesUpdate([...images, ...newImages]);
+      });
     }
   };
 
@@ -53,6 +63,7 @@ const ImageCarousel = ({ images, onImagesUpdate }) => {
           <input
             type="file"
             accept="image/*"
+            multiple
             onChange={handleImageUpload}
             className="hidden"
           />
@@ -66,7 +77,7 @@ const ImageCarousel = ({ images, onImagesUpdate }) => {
       {/* Main Image Display */}
       <div className="relative h-80 md:h-96">
         <img
-          src={images[currentIndex]}
+          src={images[currentIndex]?.url || images[currentIndex]} // Handle both object and string URLs
           alt={`Table view ${currentIndex + 1}`}
           className="w-full h-full object-cover"
         />
@@ -75,12 +86,14 @@ const ImageCarousel = ({ images, onImagesUpdate }) => {
         {images.length > 1 && (
           <>
             <button
+              type="button"
               onClick={prevImage}
               className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
             <button
+              type="button"
               onClick={nextImage}
               className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all"
             >
@@ -96,6 +109,7 @@ const ImageCarousel = ({ images, onImagesUpdate }) => {
 
         {/* Remove Current Image Button */}
         <button
+          type="button"
           onClick={() => removeImage(currentIndex)}
           className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full transition-colors"
         >
@@ -115,11 +129,12 @@ const ImageCarousel = ({ images, onImagesUpdate }) => {
               onClick={() => setCurrentIndex(index)}
             >
               <img
-                src={image}
+                src={image.url || image} // Handle both object and string URLs
                 alt={`Thumbnail ${index + 1}`}
                 className="w-full h-full object-cover"
               />
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   removeImage(index);
@@ -135,6 +150,7 @@ const ImageCarousel = ({ images, onImagesUpdate }) => {
             <input
               type="file"
               accept="image/*"
+              multiple
               onChange={handleImageUpload}
               className="hidden"
             />
@@ -146,7 +162,7 @@ const ImageCarousel = ({ images, onImagesUpdate }) => {
 };
 
 const AdminAddTable = () => {
-  const { token } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     tableNumber: "",
     seats: "",
@@ -164,6 +180,7 @@ const AdminAddTable = () => {
 
   const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [newImageFiles, setNewImageFiles] = useState([]);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -219,7 +236,12 @@ const AdminAddTable = () => {
   };
 
   const handleImagesUpdate = (newImages) => {
+    // newImages can be a mix of strings (existing URLs) and objects { url, file }
+    // The `images` prop for ImageCarousel should be the array of objects/strings
     setFormData({ ...formData, restaurantImages: newImages });
+
+    const files = newImages.map(img => img.file).filter(Boolean);
+    setNewImageFiles(files);
   };
 
   const handleSubmit = async (e) => {
@@ -246,7 +268,10 @@ const AdminAddTable = () => {
         })),
       };
 
-      await createTable(dataToSend, token);
+      // The service expects only the files for new uploads, not the data URLs.
+      // The dataToSend object already contains the data URLs for preview.
+      // The service will handle combining existing URLs with newly uploaded ones.
+      await createTable(dataToSend, newImageFiles, user?.token);
       setMessage({ text: "✅ Table added successfully! Redirecting...", type: "success" });
 
       // Reset form
@@ -264,6 +289,7 @@ const AdminAddTable = () => {
         offers: [{ title: "", discountPercent: "", bank: "", active: true }],
         notes: "",
       });
+      setNewImageFiles([]);
       
       setTimeout(() => navigate("/admin"), 1500);
 

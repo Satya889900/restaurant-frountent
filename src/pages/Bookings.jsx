@@ -4,7 +4,7 @@ import { AuthContext } from "../context/AuthContext.jsx";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Bookings = () => {
-  const { user, token } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState(null);
@@ -20,10 +20,10 @@ const Bookings = () => {
   };
 
   const fetchBookings = async () => {
-    if (!token) return;
+    if (!user?.token) return;
     setLoading(true);
     try {
-      const data = await getMyBookings(token);
+      const data = await getMyBookings(user.token);
       setBookings(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Failed to fetch bookings:", err);
@@ -35,13 +35,13 @@ const Bookings = () => {
   };
 
   useEffect(() => {
-    if (user && token) fetchBookings();
-  }, [user, token]);
+    if (user?.token) fetchBookings();
+  }, [user?.token]);
 
   const handleCancel = async (id) => {
     setCancellingId(id);
     try {
-      await cancelBooking(id, token);
+      await cancelBooking(id, user?.token);
       showPopup("Booking cancelled successfully");
       fetchBookings();
     } catch (err) {
@@ -67,7 +67,7 @@ const Bookings = () => {
     
     setLoading(true);
     try {
-      await updateBooking(editingBooking._id, { startTime: newStartTime.toISOString() }, token);
+      await updateBooking(editingBooking._id, { startTime: newStartTime.toISOString() }, user?.token);
       showPopup("Booking updated successfully!");
       setEditingBooking(null);
       fetchBookings();
@@ -83,7 +83,7 @@ const Bookings = () => {
   
   setDeletingId(id);
   try {
-    await deleteBooking(id, token);
+    await deleteBooking(id, user?.token);
     showPopup("Table booking deleted successfully!", "success");
     fetchBookings();
   } catch (err) {

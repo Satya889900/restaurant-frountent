@@ -1,146 +1,160 @@
 import axios from "axios";
 
-export const staticTablesData = [
-  {
-    _id: "static-1",
-    tableNumber: 1,
-    seats: 4,
-    isAvailable: true,
-    price: 1200,
-    restaurantImages: ["https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=60"],
-    tableClass: "1st-class",
-    classFeatures: ["Window Seat", "Private Area"],
-  },
-  {
-    _id: "static-2",
-    tableNumber: 2,
-    seats: 2,
-    isAvailable: false,
-    price: 800,
-    restaurantImages: ["https://images.unsplash.com/photo-1559339352-11d035aa65de?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=60"],
-    tableClass: "general",
-  },
-  {
-    _id: "static-3",
-    tableNumber: 3,
-    seats: 6,
-    isAvailable: true,
-    price: 1800,
-    restaurantImages: ["https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=60"],
-    tableClass: "VIP Lounge",
-  },
-];
-
 const API_URL = "http://localhost:5000/api/tables";
 
 /**
- * Get all tables with availability for a specific date/time.
- * @param {string} [date] Optional date filter (YYYY-MM-DD)
- * @param {string} [time] Optional time filter (HH:mm:ss)
- * @returns {Promise<Array>} List of tables
+ * Uploads image files to the backend and returns an array of Cloudinary URLs.
+ * @param {File[]} imageFiles - The image files to upload.
+ * @param {string} token - The user's JWT for authorization.
+ * @returns {Promise<string[]>} - A promise that resolves to an array of image URLs.
  */
-export const getTables = async (date, time) => {
-  try {
-    const queryParams = [];
-    if (date) queryParams.push(`date=${encodeURIComponent(date)}`);
-    if (time) queryParams.push(`time=${encodeURIComponent(time)}`);
-    const queryString = queryParams.length ? `?${queryParams.join("&")}` : "";
+const uploadImages = async (imageFiles, token) => {
+  const formData = new FormData();
+  for (const file of imageFiles) {
+    formData.append("images", file);
+  }
 
-    const res = await axios.get(`${API_URL}${queryString}`);
-    if (!res.data) throw new Error("No data received from server");
-    return res.data;
+  const config = {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  try {
+    const { data } = await axios.post(`${API_URL}/upload-images`, formData, config);
+    return data.urls; // The backend returns { urls: [...] }
   } catch (error) {
-    console.error("Error fetching tables:", error);
-    throw new Error(
-      error.response?.data?.message || error.message || "Failed to fetch tables"
-    );
+    console.error("Error uploading images:", error.response?.data?.message || error.message);
+    throw new Error(error.response?.data?.message || "Image upload failed");
   }
 };
 
 /**
- * Get a single table by its ID.
- * @param {string} id Table ID
- * @returns {Promise<Object>} The table object
+ * Creates a new table, handling image uploads first if necessary.
+ * @param {object} tableData - The table data from the form.
+ * @param {File[]} imageFiles - New image files to upload.
+ * @param {string} token - The user's JWT for authorization.
+ * @returns {Promise<object>} - A promise that resolves to the created table object.
+ */
+export const createTable = async (tableData, imageFiles, token) => {
+  try {
+    // Filter out local data URLs, keeping only existing http/https URLs
+    let existingImageUrls = (tableData.restaurantImages || []).filter(
+      (url) => typeof url === 'string' && url.startsWith('http')
+    );
+
+    if (imageFiles && imageFiles.length > 0) {
+      const newImageUrls = await uploadImages(imageFiles, token);
+      existingImageUrls = [...existingImageUrls, ...newImageUrls];
+    }
+
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    const { data } = await axios.post(API_URL, { ...tableData, restaurantImages: existingImageUrls }, config);
+    return data;
+  } catch (error) {
+    console.error("Error creating table:", error.response?.data?.message || error.message);
+    throw new Error(error.response?.data?.message || "Table creation failed");
+  }
+};
+
+/**
+ * Fetches tables with availability for a specific date and time.
+ * @param {string} date - The date in 'YYYY-MM-DD' format.
+ * @param {string} time - The time in 'HH:MM' format.
+ * @param {string} [token] - Optional JWT for authorization if needed for other filters.
+ * @returns {Promise<object[]>} - A promise that resolves to an array of tables.
+ */
+export const getTables = async (date, time, token) => {
+  try {
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    const { data } = await axios.get(`${API_URL}`, {
+      ...config,
+      params: { date, time },
+    });
+    return data;
+  } catch (error) {
+    console.error("Error fetching tables:", error.response?.data?.message || error.message);
+    throw new Error(error.response?.data?.message || "Failed to fetch tables");
+  }
+};
+
+/**
+ * Updates a table by its ID.
+ * @param {string} id - The ID of the table to update.
+ * @param {object} tableData - The new data for the table, may include existing image URLs.
+ * @param {File[]} imageFiles - New image files to upload.
+ * @param {string} token - The user's JWT for authorization.
+ * @returns {Promise<object>} - A promise that resolves to the updated table object.
+ */
+export const updateTable = async (id, tableData, imageFiles, token) => {
+  try {
+    // Filter out local data URLs, keeping only existing http/https URLs
+    let existingImageUrls = (tableData.restaurantImages || []).filter(
+      (url) => typeof url === 'string' && url.startsWith('http')
+    );
+
+    // Upload new images if any
+    if (imageFiles && imageFiles.length > 0) {
+      const newImageUrls = await uploadImages(imageFiles, token);
+      existingImageUrls = [...existingImageUrls, ...newImageUrls];
+    }
+
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    // Ensure the final data sent to the backend has the correct image URLs
+    const finalTableData = { ...tableData, restaurantImages: existingImageUrls };
+
+    const { data } = await axios.put(`${API_URL}/${id}`, finalTableData, config);
+    return data;
+  } catch (error) {
+    console.error("Error updating table:", error.response?.data?.message || error.message);
+    throw new Error(error.response?.data?.message || "Table update failed");
+  }
+};
+
+/**
+ * Deletes a table by its ID.
+ * @param {string} id - The ID of the table to delete.
+ * @param {string} token - The user's JWT for authorization.
+ * @returns {Promise<object>} - A promise that resolves to the success message.
+ */
+export const deleteTable = async (id, token) => {
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  try {
+    const { data } = await axios.delete(`${API_URL}/${id}`, config);
+    return data;
+  } catch (error) {
+    console.error("Error deleting table:", error.response?.data?.message || error.message);
+    throw new Error(error.response?.data?.message || "Table deletion failed");
+  }
+};
+
+/**
+ * Fetches a single table by its ID.
+ * @param {string} id - The ID of the table to fetch.
+ * @returns {Promise<object>} - A promise that resolves to the table object.
  */
 export const getTableById = async (id) => {
   try {
-    const res = await axios.get(`${API_URL}/${id}`);
-    if (!res.data) throw new Error("No data received from server");
-    return res.data;
+    const { data } = await axios.get(`${API_URL}/${id}`);
+    return data;
   } catch (error) {
-    console.error("Error fetching table by ID:", error);
-    throw new Error(
-      error.response?.data?.message || error.message || "Failed to fetch table"
-    );
-  }
-};
-/**
- * Create a new table (admin only)
- * @param {Object} tableData Full table data object
- * @param {string} token Admin JWT token
- * @returns {Promise<Object>} Created table
- */
-export const createTable = async (tableData, token) => {
-  if (!token) throw new Error("Admin token required");
-  try {
-    const config = {
-      headers: { Authorization: `Bearer ${token}` },
-    };
-    const res = await axios.post(API_URL, tableData, config);
-    if (!res.data) throw new Error("No response from server");
-    return res.data;
-  } catch (error) {
-    console.error("Error creating table:", error.response || error);
-    if (error.code === "ERR_NETWORK") {
-      throw new Error(
-        "Network Error: Could not connect to the server. Is the backend running?"
-      );
-    }
-    throw new Error(error.response?.data?.message || error.message);
-  }
-};
-
-/**
- * Update table (admin only)
- * @param {string} id Table ID
- * @param {Object} tableData Table data { tableNumber, seats, available }
- * @param {string} token Admin JWT token
- * @returns {Promise<Object>} Updated table
- */
-export const updateTable = async (id, tableData, token) => {
-  if (!token) throw new Error("Admin token required");
-  if (!id) throw new Error("Table ID required");
-  try {
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-    const res = await axios.put(`${API_URL}/${id}`, tableData, config);
-    if (!res.data) throw new Error("No response from server");
-    return res.data;
-  } catch (error) {
-    console.error("Error updating table:", error);
-    throw new Error(
-      error.response?.data?.message || error.message || "Failed to update table"
-    );
-  }
-};
-
-/**
- * Delete table (admin only)
- * @param {string} id Table ID
- * @param {string} token Admin JWT token
- * @returns {Promise<Object>} Deletion response
- */
-export const deleteTable = async (id, token) => {
-  if (!token) throw new Error("Admin token required");
-  if (!id) throw new Error("Table ID required");
-  try {
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-    const res = await axios.delete(`${API_URL}/${id}`, config);
-    if (!res.data) throw new Error("No response from server");
-    return res.data;
-  } catch (error) {
-    console.error("Error deleting table:", error);
-    throw new Error(
-      error.response?.data?.message || error.message || "Failed to delete table"
-    );
+    console.error(`Error fetching table with id ${id}:`, error.response?.data?.message || error.message);
+    throw new Error(error.response?.data?.message || "Failed to fetch table data");
   }
 };
