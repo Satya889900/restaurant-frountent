@@ -86,7 +86,8 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     } catch (error) {
       console.error("Login error:", error);
-      setAuthError(error.message);
+      // Don't show global toast for invalid credentials, let the login page handle it.
+      // A 401 status code is standard for "Unauthorized" (i.e., bad credentials).
       return { success: false, error: error.message };
     } finally {
       if (!options.localLoading) {

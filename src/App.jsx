@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import Navbar from "./components/Navbar.jsx";
@@ -12,16 +13,22 @@ import Bookings from "./pages/Bookings.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import PrivateRoute from "./pages/PrivateRoute.jsx";
+import UserProfile from "./pages/UserProfile.jsx";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 
+
 function App() {
+  useEffect(() => {
+    document.title = "FineDine - Premium Restaurant Booking";
+  }, []);
+
   return (
     <AuthProvider>
       <Router>
         <Navbar />
-        <main className="pt-20">
+        <main>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
@@ -37,6 +44,10 @@ function App() {
             <Route
               path="/bookings"
               element={<PrivateRoute><Bookings /></PrivateRoute>}
+            />
+            <Route
+              path="/profile"
+              element={<PrivateRoute><UserProfile /></PrivateRoute>}
             />
             
             {/* Admin Routes */}

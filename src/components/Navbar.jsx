@@ -36,7 +36,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-white text-gray-800 shadow-lg border-b border-gray-200 relative">
+    <nav className="bg-white text-gray-800 shadow-lg border-b border-gray-200">
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap justify-between items-center py-4">
           {/* Logo */}
@@ -113,16 +113,18 @@ const Navbar = () => {
               </>
             ) : (
               <div className="flex items-center space-x-4 ml-4 pl-4 border-l border-gray-300">
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="flex items-center space-x-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl px-4 py-2 border-2 border-green-200"
-                >
-                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                  <div>
-                    <span className="text-sm font-semibold text-gray-700">Welcome, {user.name}</span>
-                    <p className="text-xs text-green-600 font-medium">✓ Verified User</p>
-                  </div>
-                </motion.div>
+                <Link to="/profile">
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="flex items-center space-x-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl px-4 py-2 border-2 border-green-200 cursor-pointer"
+                  >
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <div>
+                      <span className="text-sm font-semibold text-gray-700">Welcome, {user.name}</span>
+                      <p className="text-xs text-green-600 font-medium">✓ Verified User</p>
+                    </div>
+                  </motion.div>
+                </Link>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -227,10 +229,12 @@ const Navbar = () => {
                     </>
                   ) : (
                     <>
-                      <div className="px-6 py-3 text-center bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
-                        <p className="font-semibold text-gray-700">Welcome, {user.name}</p>
-                        <p className="text-sm text-green-600 font-medium">✓ Verified User</p>
-                      </div>
+                      <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="block px-6">
+                        <div className="py-3 text-center bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
+                          <p className="font-semibold text-gray-700">Welcome, {user.name}</p>
+                          <p className="text-sm text-green-600 font-medium">✓ Verified User</p>
+                        </div>
+                      </Link>
                       <motion.button
                         whileHover={{ scale: 1.02 }}
                         onClick={handleLogout}
