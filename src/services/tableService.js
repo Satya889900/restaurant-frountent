@@ -14,12 +14,12 @@ const uploadImages = async (imageFiles, token) => {
     formData.append("images", file);
   }
 
-  const config = {
+  const config = { 
     headers: {
       "Content-Type": "multipart/form-data",
       Authorization: `Bearer ${token}`,
     },
-  };
+  }; 
 
   try {
     const { data } = await axios.post(`${API_URL}/upload-images`, formData, config);
