@@ -1,7 +1,6 @@
-import React,
-{ useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, Search, ChevronDown } from 'lucide-react';
+import { HelpCircle, Search, ChevronDown, X } from 'lucide-react';
 
 const faqs = [
     {
@@ -57,16 +56,30 @@ const FAQItem = ({ faq }) => {
     );
 };
 
-const HelpCenter = () => {
+const HelpCenter = ({ onClose }) => {
+    useEffect(() => {
+        const handleEsc = (event) => {
+            if (event.key === 'Escape') {
+                onClose();
+            }
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [onClose]);
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={onClose}
+        >
             <motion.div
                 className="max-w-4xl mx-auto"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
+                onClick={(e) => e.stopPropagation()}
             >
-                <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+                <div className="bg-white rounded-3xl shadow-2xl overflow-hidden relative">
                     {/* Header */}
                     <div className="p-8 bg-gradient-to-r from-gray-700 to-gray-900 text-white">
                         <div className="flex items-center gap-4">
@@ -86,6 +99,13 @@ const HelpCenter = () => {
                                 className="w-full bg-white/10 border border-white/20 rounded-xl p-4 pl-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50"
                             />
                         </div>
+                        <button
+                            aria-label="Close"
+                            onClick={onClose}
+                            className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 rounded-full p-2 transition z-10"
+                        >
+                            <X className="w-6 h-6 text-white" />
+                        </button>
                     </div>
 
                     {/* FAQs */}

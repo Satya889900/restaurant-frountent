@@ -3,6 +3,7 @@ import TableCard from "../components/Table/TableCard.jsx";
 import { getTables } from "../services/tableService.js";
 import { AuthContext } from "../context/AuthContext.jsx";
 import { createBooking } from "../services/bookingService.js";
+import TermsOfService from "../components/footer/TermsOfService.jsx";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Calendar, 
@@ -36,6 +37,7 @@ const Home = () => {
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [paymentOffers, setPaymentOffers] = useState([]);
+  const [showTerms, setShowTerms] = useState(false);
   const carouselRef = useRef(null);
 
   // Available time slots
@@ -391,6 +393,13 @@ const Home = () => {
             )}
             <p className="font-semibold text-lg">{popup.message}</p>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Terms of Service Modal */}
+      <AnimatePresence>
+        {showTerms && (
+          <TermsOfService onClose={() => setShowTerms(false)} />
         )}
       </AnimatePresence>
 
@@ -818,6 +827,12 @@ const Home = () => {
                   <p className="text-white text-lg font-medium">Applicable on all restaurants</p>
                 </div>
               </div>
+              <button
+                onClick={() => setShowTerms(true)}
+                className="mt-6 text-indigo-200 underline hover:text-white transition-colors"
+              >
+                View Terms of Service
+              </button>
             </div>
           </div>
         </motion.div>

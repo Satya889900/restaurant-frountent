@@ -32,51 +32,51 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <Navbar />
-        <main>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms-of-service" element={<TermsOfService />} />
-            <Route path="/help" element={<HelpCenter />} />
-            <Route path="/contact" element={<ContactUs />} />
-            
-            {/* Protected Routes */}
-            <Route
-              path="/dashboard"
-              element={<PrivateRoute><Dashboard /></PrivateRoute>}
-            />
-            <Route
-              path="/bookings"
-              element={<PrivateRoute><Bookings /></PrivateRoute>}
-            />
-            <Route
-              path="/profile"
-              element={<PrivateRoute><UserProfile /></PrivateRoute>}
-            />
-            
-            {/* Admin Routes */}
-            <Route
-              path="/admin"
-              element={<PrivateRoute roles={['admin']}><AdminPanel /></PrivateRoute>}
-            />
-            <Route
-              path="/admin/add-table"
-              element={
-                <PrivateRoute roles={['admin']}><AdminAddTable /></PrivateRoute>
-              }
-            />
-            <Route
-              path="/admin/edit-table/:id"
-              element={<PrivateRoute roles={['admin']}><AdminEditTable /></PrivateRoute>}
-            />
-          </Routes>
-        </main>
-        <Footer />
+        <div className="flex flex-col min-h-screen">
+          <Navbar />
+          <main className="flex-grow">
+            <div className="flex-grow">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                
+                {/* Protected Routes */}
+                <Route
+                  path="/dashboard"
+                  element={<PrivateRoute><Dashboard /></PrivateRoute>}
+                />
+                <Route
+                  path="/bookings"
+                  element={<PrivateRoute><Bookings /></PrivateRoute>}
+                />
+                <Route
+                  path="/profile"
+                  element={<PrivateRoute><UserProfile /></PrivateRoute>}
+                />
+                
+                {/* Admin Routes */}
+                <Route
+                  path="/admin"
+                  element={<PrivateRoute roles={['admin']}><AdminPanel /></PrivateRoute>}
+                />
+                <Route
+                  path="/admin/add-table"
+                  element={
+                    <PrivateRoute roles={['admin']}><AdminAddTable /></PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/admin/edit-table/:id"
+                  element={<PrivateRoute roles={['admin']}><AdminEditTable /></PrivateRoute>}
+                />
+              </Routes>
+            </div>
+          </main>
+          <Footer />
+        </div>
       </Router>
     </AuthProvider>
   );

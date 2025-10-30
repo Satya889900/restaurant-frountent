@@ -1,17 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, FileText } from 'lucide-react';
+import { Shield, FileText, X } from 'lucide-react';
 
-const PrivacyPolicy = () => {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+const PrivacyPolicy = ({ onClose }) => {
+    useEffect(() => {
+        const handleEsc = (event) => {
+            if (event.key === 'Escape') {
+                onClose();
+            }
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [onClose]);
+
+    return (
+    <div
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        onClick={onClose}
+    >
       <motion.div
         className="max-w-4xl mx-auto"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden relative">
           {/* Header */}
           <div className="p-8 bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
             <div className="flex items-center gap-4">
@@ -23,10 +37,16 @@ const PrivacyPolicy = () => {
                 <p className="text-indigo-200 mt-1">Last updated: {new Date().toLocaleDateString()}</p>
               </div>
             </div>
+            <button
+                aria-label="Close"
+                onClick={onClose}
+                className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 rounded-full p-2 transition z-10">
+                <X className="w-6 h-6 text-white" />
+            </button>
           </div>
 
           {/* Content */}
-          <div className="p-8 md:p-12 space-y-8 text-gray-700 leading-relaxed">
+          <div className="p-8 md:p-12 space-y-8 text-gray-700 leading-relaxed max-h-[70vh] overflow-y-auto">
             <section>
               <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
                 <FileText className="w-6 h-6 mr-3 text-indigo-500" />

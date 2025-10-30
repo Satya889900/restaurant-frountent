@@ -31,6 +31,7 @@ const Navbar = () => {
 
   const navItems = [
     { path: "/", label: "Home", show: user },
+    { path: "/online-food", label: "Online Food", show: user },
     { path: "/bookings", label: "My Bookings", show: user },
     { path: "/admin", label: "Admin Panel", show: user?.role === "admin" },
   ];
@@ -94,6 +95,14 @@ const Navbar = () => {
             {/* Auth Buttons */}
             {!user ? (
               <>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Link
+                    to="/online-food"
+                    className="px-4 py-2 rounded-xl font-semibold text-gray-600 hover:text-purple-600 transition-all duration-300 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
+                  >
+                    Online Food
+                  </Link>
+                </motion.div>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     to="/login"
@@ -207,7 +216,16 @@ const Navbar = () => {
                 {/* Auth Buttons */}
                 <div className="pt-4 border-t border-gray-200 space-y-3">
                   {!user ? (
-                    <>
+                    <> 
+                      <motion.div whileHover={{ scale: 1.02 }}>
+                        <Link
+                          to="/online-food"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="block px-6 py-3 text-center text-gray-600 hover:text-purple-600 rounded-xl font-semibold transition-all duration-300 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
+                        >
+                          Online Food
+                        </Link>
+                      </motion.div>
                       <motion.div whileHover={{ scale: 1.02 }}>
                         <Link
                           to="/login"
