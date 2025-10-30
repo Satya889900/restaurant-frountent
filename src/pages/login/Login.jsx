@@ -1,5 +1,5 @@
 import { useState, useContext, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext.jsx";
+import { AuthContext } from "../../context/AuthContext.jsx";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, LogIn, Loader, Eye, EyeOff, XCircle } from 'lucide-react';

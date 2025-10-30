@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { KeyRound, Lock, Eye, EyeOff, Loader, CheckCircle, AlertCircle } from "lucide-react";
-import { resetPassword } from '../services/authService';
+import { resetPassword } from '../../services/authService';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();

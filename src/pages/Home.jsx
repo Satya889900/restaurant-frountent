@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext, useRef, useLayoutEffect } from "react";
-import TableCard from "../components/TableCard.jsx";
+import TableCard from "../components/Table/TableCard.jsx";
 import { getTables } from "../services/tableService.js";
 import { AuthContext } from "../context/AuthContext.jsx";
 import { createBooking } from "../services/bookingService.js";
@@ -1078,22 +1078,6 @@ const Home = () => {
           </div>
         </motion.div>
 
-        {/* Footer */}
-        <motion.div 
-          variants={itemVariants}
-          className="text-center mt-16 pt-12 border-t border-gray-300 px-8 pb-8"
-        >
-          <div className="max-w-4xl mx-auto">
-            <p className="text-gray-600 text-lg mb-4">
-              Need assistance? Call us at <span className="text-indigo-600 font-semibold">(555) 123-4567</span>
-            </p>
-            <p className="text-gray-500 text-sm">
-              © 2024 Fine Dining Restaurant. All rights reserved. | 
-              <span className="text-indigo-500 ml-2">Privacy Policy</span> • 
-              <span className="text-indigo-500 ml-2">Terms of Service</span>
-            </p>
-          </div>
-        </motion.div>
       </motion.div>
     </div>
   );

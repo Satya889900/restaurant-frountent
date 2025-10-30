@@ -1,7 +1,7 @@
-import React, { useState, useContext } from "react";
-import { createTable } from "../services/tableService.js";
-import { AuthContext } from "../context/AuthContext.jsx";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { getTableById, updateTable, createTable } from "../../services/tableService.js";
+import { AuthContext } from "../../context/AuthContext.jsx";
 import { motion } from "framer-motion";
 import { Plus, Trash2, Upload, X, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -161,8 +161,11 @@ const ImageCarousel = ({ images, onImagesUpdate }) => {
   );
 };
 
-const AdminAddTable = () => {
+const AdminEditTable = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+
   const [formData, setFormData] = useState({
     tableNumber: "",
     seats: "",
@@ -181,7 +184,38 @@ const AdminAddTable = () => {
   const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [newImageFiles, setNewImageFiles] = useState([]);
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchTableData = async () => {
+      setIsLoading(true);
+      try {
+        const table = await getTableById(id);
+        setFormData({
+          tableNumber: table.tableNumber || "",
+          seats: table.seats || "",
+          isAvailable: table.isAvailable !== undefined ? table.isAvailable : true,
+          // Ensure restaurantImages are just URLs on initial load
+          restaurantImages: (table.restaurantImages || (table.restaurantImage ? [table.restaurantImage] : [])).map(img => 
+            typeof img === 'object' ? img.url : img
+          ),
+          location: table.location?.address || "",
+          foodTypes: (table.foodTypes || []).join(", "),
+          foodMenu: (table.foodMenu || []).length > 0 ? table.foodMenu : [{ name: "", price: "", veg: true, isAvailable: true }],
+          tableClass: table.tableClass || "general",
+          classFeatures: table.classFeatures || [],
+          price: table.price || "",
+          offers: (table.offers || []).length > 0 ? table.offers : [{ title: "", discountPercent: "", bank: "", active: true }],
+          notes: table.notes || "",
+        });
+      } catch (err) {
+        setMessage({ text: `Error fetching table data: ${err.message}`, type: "error" });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTableData();
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -237,10 +271,11 @@ const AdminAddTable = () => {
 
   const handleImagesUpdate = (newImages) => {
     // newImages can be a mix of strings (existing URLs) and objects { url, file }
-    // The `images` prop for ImageCarousel should be the array of objects/strings
-    setFormData({ ...formData, restaurantImages: newImages });
-
-    const files = newImages.map(img => img.file).filter(Boolean);
+    const urls = newImages.map(img => img.url || img);
+    const files = newImages
+      .map(img => img.file)
+      .filter(Boolean); // Filter out undefined for existing images
+    setFormData({ ...formData, restaurantImages: urls });
     setNewImageFiles(files);
   };
 
@@ -254,11 +289,8 @@ const AdminAddTable = () => {
         price: Number(formData.price),
         seats: Number(formData.seats),
         tableNumber: Number(formData.tableNumber),
-        location: {
-          address: formData.location,
-          city: "Mumbai",
-        },
-        foodTypes: formData.foodTypes.split(",").map((f) => f.trim()).filter(f => f),
+        location: { address: formData.location, city: "Mumbai" },
+        foodTypes: formData.foodTypes.split(",").map((f) => f.trim()).filter(Boolean),
         foodMenu: formData.foodMenu.filter(item => item.name.trim() !== "").map(item => ({ ...item, price: Number(item.price) || 0 })),
         classFeatures: formData.classFeatures,
         offers: formData.offers.filter(offer => offer.title.trim() !== "").map(offer => ({
@@ -268,34 +300,11 @@ const AdminAddTable = () => {
         })),
       };
 
-      // The service expects only the files for new uploads, not the data URLs.
-      // The dataToSend object already contains the data URLs for preview.
-      // The service will handle combining existing URLs with newly uploaded ones.
-      await createTable(dataToSend, newImageFiles, user?.token);
-      setMessage({ text: "✅ Table added successfully! Redirecting...", type: "success" });
-
-      // Reset form
-      setFormData({
-        tableNumber: "",
-        seats: "",
-        isAvailable: true,
-        restaurantImages: [],
-        location: "",
-        foodTypes: "",
-        foodMenu: [{ name: "", price: "", veg: true, isAvailable: true }],
-        tableClass: "general",
-        classFeatures: [],
-        price: "",
-        offers: [{ title: "", discountPercent: "", bank: "", active: true }],
-        notes: "",
-      });
-      setNewImageFiles([]);
-      
+      await updateTable(id, dataToSend, newImageFiles, user?.token);
+      setMessage({ text: "✅ Table updated successfully! Redirecting...", type: "success" });
       setTimeout(() => navigate("/admin"), 1500);
-
     } catch (err) {
-      setMessage({ text: err.message || "❌ Failed to add table. Check your data.", type: "error" });
-      console.error(err);
+      setMessage({ text: err.message || "❌ Failed to update table.", type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -316,6 +325,17 @@ const AdminAddTable = () => {
     show: { opacity: 1, y: 0 }
   };
 
+  if (isLoading && !formData.tableNumber) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading table data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 py-8 px-4">
       <motion.div
@@ -327,10 +347,10 @@ const AdminAddTable = () => {
         {/* Header */}
         <motion.div variants={itemVariants} className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Add New Table
+            Edit Table Configuration
           </h1>
           <p className="text-gray-600 text-lg">
-            Create a new table configuration with images and features
+            Update table details, images, and features
           </p>
         </motion.div>
 
@@ -658,10 +678,10 @@ const AdminAddTable = () => {
               {isLoading ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                  Creating Table...
+                  Updating Table...
                 </div>
               ) : (
-                "Create Table"
+                "Update Table"
               )}
             </motion.button>
           </motion.div>
@@ -671,4 +691,4 @@ const AdminAddTable = () => {
   );
 };
 
-export default AdminAddTable;
+export default AdminEditTable;

@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
-import { createBooking } from "../services/bookingService.js";
-import { getTables } from "../services/tableService.js";
-import { AuthContext } from "../context/AuthContext.jsx";
+import { createBooking } from "../../services/bookingService.js";
+import { getTables } from "../../services/tableService.js";
+import { AuthContext } from "../../context/AuthContext.jsx";
 import { motion } from "framer-motion";
 
 const BookingForm = () => {

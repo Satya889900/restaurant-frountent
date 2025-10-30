@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from "react";
-import { getTables, deleteTable, updateTable } from "../services/tableService.js";
-import { AuthContext } from "../context/AuthContext.jsx";
+import { getTables, deleteTable, updateTable } from "../../services/tableService.js";
+import { AuthContext } from "../../context/AuthContext.jsx";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
@@ -18,7 +18,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { Utensils, StickyNote, Tag, ChefHat } from "lucide-react";
-import TableImageCarousel from "../components/TableImageCarousel.jsx";
+import TableImageCarousel from "../../components/Table/TableImageCarousel.jsx";
 
 const AdminPanel = () => {
   const { user } = useContext(AuthContext);
