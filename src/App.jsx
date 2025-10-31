@@ -5,6 +5,7 @@ import Navbar from "./components/Navbar/Navbar.jsx";
 import Footer from "./components/footer/Footer.jsx";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/login/Login.jsx";
+import OnlineFood from "./pages/OnlineFood.jsx";
 import Register from "./pages/login/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import AdminPanel from "./pages/Admin/AdminPanel.jsx";
@@ -38,6 +39,7 @@ function App() {
             <div className="flex-grow">
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/online-food" element={<OnlineFood />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />

@@ -169,6 +169,7 @@ const AdminEditTable = () => {
   const [formData, setFormData] = useState({
     tableNumber: "",
     seats: "",
+    restaurantName: "",
     isAvailable: true,
     restaurantImages: [],
     location: "",
@@ -193,6 +194,7 @@ const AdminEditTable = () => {
         setFormData({
           tableNumber: table.tableNumber || "",
           seats: table.seats || "",
+          restaurantName: table.restaurantName || "",
           isAvailable: table.isAvailable !== undefined ? table.isAvailable : true,
           // Ensure restaurantImages are just URLs on initial load
           restaurantImages: (table.restaurantImages || (table.restaurantImage ? [table.restaurantImage] : [])).map(img => 
@@ -387,6 +389,27 @@ const AdminEditTable = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left Column - Basic Information */}
             <div className="space-y-6">
+              {/* Restaurant Name Card */}
+              <motion.div variants={itemVariants} className="bg-white rounded-2xl shadow-lg p-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                  <div className="w-2 h-6 bg-indigo-500 rounded-full mr-3"></div>
+                  Restaurant Name
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="font-semibold text-gray-700 block mb-2">Restaurant Name</label>
+                    <input
+                      type="text"
+                      name="restaurantName"
+                      value={formData.restaurantName}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+              </motion.div>
+
               {/* Basic Details Card */}
               <motion.div variants={itemVariants} className="bg-white rounded-2xl shadow-lg p-6">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">

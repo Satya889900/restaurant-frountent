@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Users, Clock, MapPin, Star, CheckCircle, XCircle, Crown, Tag } from "lucide-react";
+import { Users, Clock, MapPin, Star, CheckCircle, XCircle, Crown, Tag, Building } from "lucide-react";
 import TableImageCarousel from "./TableImageCarousel.jsx";
 
 const TableCard = ({ table, onBook }) => {
@@ -115,17 +115,23 @@ const TableCard = ({ table, onBook }) => {
               <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300
                 ${
                   isAvailable 
-                    ? "bg-gradient-to-br from-green-500 to-emerald-600" 
-                    : "bg-gradient-to-br from-red-500 to-rose-600"
+                    ? "bg-gradient-to-br from-indigo-500 to-purple-600" 
+                    : "bg-gradient-to-br from-gray-500 to-gray-600"
                 }`}
               >
-                <Users className="w-8 h-8 text-white" />
+                <Building className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                  Table {table.tableNumber}
+                <h2 className="text-2xl font-bold text-gray-900 mb-1 truncate" title={table.restaurantName}>
+                  {table.restaurantName || 'Restaurant'}
                 </h2>
-                <div className={`w-20 h-1 rounded-full
+                <p className="text-sm text-gray-500 font-semibold flex items-center">
+                  <Users className="w-4 h-4 mr-2 text-gray-400" />
+                  <span>
+                    {table.tableName || `Table ${table.tableNumber}`}
+                  </span>
+                </p>
+                <div className={`w-16 h-1 rounded-full
                   ${
                     isAvailable 
                       ? "bg-gradient-to-r from-green-500 to-emerald-500" 

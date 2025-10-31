@@ -304,11 +304,14 @@ const AdminPanel = () => {
                   <div className="flex-grow">
                     {/* Title and Seats */}
                     <div className="flex justify-between items-baseline mb-3">
-                      <h4 className="text-xl font-bold text-gray-900">Table {table.tableNumber}</h4>
+                      <h4 className="text-xl font-bold text-gray-900 truncate" title={table.restaurantName}>
+                        {table.restaurantName || 'Unnamed Restaurant'}
+                      </h4>
                       <p className="text-sm font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">
                         {table.seats} {table.seats === 1 ? 'seat' : 'seats'}
                       </p>
                     </div>
+                    <p className="text-sm text-gray-500 mb-3">Table {table.tableNumber}</p>
 
                     {/* Price and Features */}
                     <div className="space-y-2 mb-4">
