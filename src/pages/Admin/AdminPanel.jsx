@@ -15,7 +15,7 @@ import {
   Table as TableIcon,
   MapPin,
   Star,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
 import { Utensils, StickyNote, Tag, ChefHat } from "lucide-react";
 import TableImageCarousel from "../../components/Table/TableImageCarousel.jsx";

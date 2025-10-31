@@ -1,10 +1,25 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useContext, useState } from "react";
 import { AuthContext } from "../../context/AuthContext.jsx";
+import { useCart } from "../../context/CartContext.jsx";
 import { motion, AnimatePresence } from "framer-motion";
+import { 
+  ShoppingCart, 
+  Home, 
+  Utensils, 
+  CalendarCheck, 
+  Shield, 
+  BookOpen,
+  LogIn,
+  UserPlus,
+  LogOut,
+  User,
+  DoorOpen
+} from "lucide-react";
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
+  const { cartItems } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -29,16 +44,18 @@ const Navbar = () => {
 
   const isActiveRoute = (path) => location.pathname === path;
 
+  const cartItemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
   const navItems = [
-    { path: "/", label: "Home", show: user },
-    { path: "/online-food", label: "Online Food", show: user },
-    { path: "/bookings", label: "My Bookings", show: user },
-    { path: "/admin", label: "Admin Panel", show: user?.role === "admin" },
+    { path: "/", label: "Home", icon: <Home className="w-5 h-5 mr-2" />, show: user },
+    { path: "/online-food", label: "Online Food", icon: <Utensils className="w-5 h-5 mr-2" />, show: user },
+    { path: "/bookings", label: "My Bookings", icon: <CalendarCheck className="w-5 h-5 mr-2" />, show: user },
+    { path: "/admin", label: "Admin", icon: <Shield className="w-5 h-5 mr-2" />, show: user?.role === "admin" },
   ];
 
   return (
     <nav className="bg-white text-gray-800 shadow-lg border-b border-gray-200">
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap justify-between items-center py-4">
           {/* Logo */}
           <Link
@@ -70,12 +87,13 @@ const Navbar = () => {
                   <motion.div key={item.path} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Link
                       to={item.path}
-                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 border-2 ${
+                      className={`flex items-center px-4 py-2 rounded-xl font-semibold transition-all duration-300 border-2 ${
                         isActiveRoute(item.path)
                           ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg border-transparent"
                           : "text-gray-600 hover:text-purple-600 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
                       }`}
                     >
+                      {item.icon}
                       {item.label}
                     </Link>
                   </motion.div>
@@ -85,10 +103,24 @@ const Navbar = () => {
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <button
                   onClick={handleBookTableClick}
-                  className="px-4 py-2 rounded-xl font-semibold transition-all duration-300 border-2 text-gray-600 hover:text-purple-600 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
+                  className="flex items-center px-4 py-2 rounded-xl font-semibold transition-all duration-300 border-2 text-gray-600 hover:text-purple-600 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
                 >
+                  <BookOpen className="w-5 h-5 mr-2" />
                   Book a Table
                 </button>
+              </motion.div>
+            )}
+            {user && (
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Link to="/cart" className="relative flex items-center px-4 py-2 rounded-xl font-semibold text-gray-600 hover:text-purple-600 transition-all duration-300 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50">
+                  <ShoppingCart className="w-5 h-5 mr-2" />
+                  <span>Cart</span>
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </Link>
               </motion.div>
             )}
 
@@ -98,24 +130,27 @@ const Navbar = () => {
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     to="/online-food"
-                    className="px-4 py-2 rounded-xl font-semibold text-gray-600 hover:text-purple-600 transition-all duration-300 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
+                    className="flex items-center px-4 py-2 rounded-xl font-semibold text-gray-600 hover:text-purple-600 transition-all duration-300 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
                   >
+                    <Utensils className="w-5 h-5 mr-2" />
                     Online Food
                   </Link>
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     to="/login"
-                    className="px-4 py-2 rounded-xl font-semibold text-gray-600 hover:text-purple-600 transition-all duration-300 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
+                    className="flex items-center px-4 py-2 rounded-xl font-semibold text-gray-600 hover:text-purple-600 transition-all duration-300 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
                   >
+                    <LogIn className="w-5 h-5 mr-2" />
                     Login
                   </Link>
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     to="/register"
-                    className="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:from-purple-600 hover:to-indigo-700"
+                    className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:from-purple-600 hover:to-indigo-700"
                   >
+                    <UserPlus className="w-5 h-5 mr-2" />
                     Get Started
                   </Link>
                 </motion.div>
@@ -127,7 +162,7 @@ const Navbar = () => {
                     whileHover={{ scale: 1.02 }}
                     className="flex items-center space-x-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl px-4 py-2 border-2 border-green-200 cursor-pointer"
                   >
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <User className="w-5 h-5 text-green-600" />
                     <div>
                       <span className="text-sm font-semibold text-gray-700">Welcome, {user.name}</span>
                       <p className="text-xs text-green-600 font-medium">✓ Verified User</p>
@@ -140,7 +175,8 @@ const Navbar = () => {
                   onClick={handleLogout}
                   className="px-4 py-2 bg-gradient-to-r from-red-500 to-rose-600 rounded-xl font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent flex items-center space-x-2"
                 >
-                  <span>🚪 Logout</span>
+                  <LogOut className="w-5 h-5 mr-2" />
+                  <span>Logout</span>
                 </motion.button>
               </div>
             )}
@@ -191,12 +227,13 @@ const Navbar = () => {
                         <Link
                           to={item.path}
                           onClick={() => setIsMenuOpen(false)}
-                          className={`block px-6 py-3 rounded-xl font-semibold transition-all duration-300 border-2 ${
+                          className={`flex items-center justify-center px-6 py-3 rounded-xl font-semibold transition-all duration-300 border-2 ${
                             isActiveRoute(item.path)
                               ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg border-transparent"
                               : "text-gray-600 hover:text-purple-600 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
                           }`}
                         >
+                          {item.icon}
                           {item.label}
                         </Link>
                       </motion.div>
@@ -206,10 +243,24 @@ const Navbar = () => {
                   <motion.div whileHover={{ scale: 1.02 }}>
                     <button
                       onClick={handleBookTableClick}
-                      className="block w-full text-left px-6 py-3 rounded-xl font-semibold transition-all duration-300 border-2 text-gray-600 hover:text-purple-600 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
+                      className="flex items-center justify-center w-full text-left px-6 py-3 rounded-xl font-semibold transition-all duration-300 border-2 text-gray-600 hover:text-purple-600 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
                     >
+                      <BookOpen className="w-5 h-5 mr-2" />
                       Book a Table
                     </button>
+                  </motion.div>
+                )}
+                {user && (
+                  <motion.div whileHover={{ scale: 1.02 }}>
+                    <Link to="/cart" onClick={() => setIsMenuOpen(false)} className={`relative flex items-center justify-center px-6 py-3 rounded-xl font-semibold transition-all duration-300 border-2 ${isActiveRoute('/cart') ? "bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg border-transparent" : "text-gray-600 hover:text-purple-600 border-gray-200 hover:border-purple-300 hover:bg-purple-50"}`}>
+                      <ShoppingCart className="w-5 h-5 mr-2" />
+                      <span>Cart</span>
+                      {cartItemCount > 0 && (
+                        <span className="absolute top-1 right-1 flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full">
+                          {cartItemCount}
+                        </span>
+                      )}
+                    </Link>
                   </motion.div>
                 )}
 
@@ -221,8 +272,9 @@ const Navbar = () => {
                         <Link
                           to="/online-food"
                           onClick={() => setIsMenuOpen(false)}
-                          className="block px-6 py-3 text-center text-gray-600 hover:text-purple-600 rounded-xl font-semibold transition-all duration-300 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
+                          className="flex items-center justify-center px-6 py-3 text-center text-gray-600 hover:text-purple-600 rounded-xl font-semibold transition-all duration-300 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
                         >
+                          <Utensils className="w-5 h-5 mr-2" />
                           Online Food
                         </Link>
                       </motion.div>
@@ -230,8 +282,9 @@ const Navbar = () => {
                         <Link
                           to="/login"
                           onClick={() => setIsMenuOpen(false)}
-                          className="block px-6 py-3 text-center text-gray-600 hover:text-purple-600 rounded-xl font-semibold transition-all duration-300 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
+                          className="flex items-center justify-center px-6 py-3 text-center text-gray-600 hover:text-purple-600 rounded-xl font-semibold transition-all duration-300 border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50"
                         >
+                          <LogIn className="w-5 h-5 mr-2" />
                           Login
                         </Link>
                       </motion.div>
@@ -239,8 +292,9 @@ const Navbar = () => {
                         <Link
                           to="/register"
                           onClick={() => setIsMenuOpen(false)}
-                          className="block px-6 py-3 text-center bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 border-2 border-transparent"
+                          className="flex items-center justify-center px-6 py-3 text-center bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 border-2 border-transparent"
                         >
+                          <UserPlus className="w-5 h-5 mr-2" />
                           Get Started
                         </Link>
                       </motion.div>
@@ -248,9 +302,12 @@ const Navbar = () => {
                   ) : (
                     <>
                       <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="block px-6">
-                        <div className="py-3 text-center bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
-                          <p className="font-semibold text-gray-700">Welcome, {user.name}</p>
-                          <p className="text-sm text-green-600 font-medium">✓ Verified User</p>
+                        <div className="flex items-center justify-center space-x-3 py-3 text-center bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
+                          <User className="w-5 h-5 text-green-600" />
+                          <div>
+                            <p className="font-semibold text-gray-700">Welcome, {user.name}</p>
+                            <p className="text-sm text-green-600 font-medium">✓ Verified User</p>
+                          </div>
                         </div>
                       </Link>
                       <motion.button
@@ -258,7 +315,7 @@ const Navbar = () => {
                         onClick={handleLogout}
                         className="w-full px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 rounded-xl font-semibold text-white shadow-lg transition-all duration-300 border-2 border-transparent flex items-center justify-center space-x-2"
                       >
-                        <span>🚪 Logout</span>
+                        <LogOut className="w-5 h-5" /><span>Logout</span>
                       </motion.button>
                     </>
                   )}
