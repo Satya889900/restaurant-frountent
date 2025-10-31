@@ -33,7 +33,10 @@ const OnlineFood = () => {
     const fetchTables = async () => {
       setIsLoading(true);
       try {
-        const data = await getTables();
+        const now = new Date();
+        const date = now.toISOString().split("T")[0];
+        const time = now.toTimeString().split(" ")[0];
+        const data = await getTables(date, time);
         setTables(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error(err);
